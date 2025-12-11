@@ -1,0 +1,423 @@
+/**
+ * WooCommerce Collection Date - Checkout Styles
+ *
+ * @package WC_Collection_Date
+ * @since 1.0.0
+ */
+
+/* ========================================
+   Collection Date Field Wrapper
+   ======================================== */
+
+.wc-collection-date-wrapper {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    clear: both;
+}
+
+.wc-collection-date-label {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.wc-collection-date-label .required {
+    color: #e2401c;
+    text-decoration: none;
+    border: none;
+}
+
+.wc-collection-date-field {
+    position: relative;
+}
+
+#collection_date {
+    cursor: pointer !important;
+    background: #fff !important;
+    user-select: none;
+}
+
+#collection_date:focus {
+    border-color: #5c9fd8;
+    outline: none;
+}
+
+/* ========================================
+   Flatpickr Calendar Customization
+   ======================================== */
+
+.wc-collection-date-calendar {
+    z-index: 999999 !important;
+}
+
+/* Inline calendar display */
+.flatpickr-calendar.inline {
+    display: block !important;
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    margin: 15px 0 !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    max-width: 100% !important;
+}
+
+/* Hide the input field visually but keep it in DOM for form submission */
+#collection_date {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Make calendar container visible */
+.wc-collection-date-wrapper .flatpickr-calendar {
+    width: 100% !important;
+    max-width: 350px !important;
+}
+
+.wc-collection-date-calendar .flatpickr-day {
+    border-radius: 4px;
+}
+
+.wc-collection-date-calendar .flatpickr-day.selected {
+    background: #5c9fd8 !important;
+    border-color: #5c9fd8 !important;
+    color: #fff !important;
+}
+
+.wc-collection-date-calendar .flatpickr-day.selected:hover {
+    background: #4a8bc2 !important;
+    border-color: #4a8bc2 !important;
+}
+
+.wc-collection-date-calendar .flatpickr-day:hover:not(.selected):not(.flatpickr-disabled) {
+    background: #f0f0f0;
+    border-color: #ddd;
+}
+
+.wc-collection-date-calendar .flatpickr-day.flatpickr-disabled {
+    color: #ccc !important;
+    cursor: not-allowed !important;
+}
+
+.wc-collection-date-calendar .flatpickr-day.today {
+    border-color: #5c9fd8;
+    font-weight: bold;
+}
+
+.wc-collection-date-calendar .flatpickr-day.today:not(.selected) {
+    background: rgba(92, 159, 216, 0.1);
+}
+
+/* Month navigation */
+.wc-collection-date-calendar .flatpickr-months {
+    background: #5c9fd8;
+    color: #fff;
+    position: relative;
+    height: 50px !important;
+    padding: 10px 0 !important;
+}
+
+.wc-collection-date-calendar .flatpickr-current-month {
+    color: #fff;
+    height: 34px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+}
+
+.wc-collection-date-calendar .flatpickr-monthDropdown-months {
+    background: #fff !important;
+    color: #333 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    padding: 5px 8px !important;
+    font-size: 14px !important;
+    cursor: pointer !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    margin: 0 5px !important;
+}
+
+.wc-collection-date-calendar .flatpickr-monthDropdown-months:hover {
+    background: #f5f5f5 !important;
+}
+
+.wc-collection-date-calendar .numInputWrapper {
+    background: #fff !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+    padding: 5px 8px !important;
+    margin: 0 5px !important;
+}
+
+.wc-collection-date-calendar .numInputWrapper input {
+    color: #333 !important;
+    font-size: 14px !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.wc-collection-date-calendar .numInputWrapper span {
+    border: none !important;
+    opacity: 0.7 !important;
+}
+
+.wc-collection-date-calendar .numInputWrapper span:hover {
+    opacity: 1 !important;
+}
+
+.wc-collection-date-calendar .flatpickr-prev-month,
+.wc-collection-date-calendar .flatpickr-next-month {
+    fill: #fff !important;
+    height: 34px !important;
+    line-height: 34px !important;
+    top: 8px !important;
+}
+
+.wc-collection-date-calendar .flatpickr-prev-month:hover,
+.wc-collection-date-calendar .flatpickr-next-month:hover {
+    color: #fff;
+    opacity: 0.8;
+}
+
+.wc-collection-date-calendar .flatpickr-prev-month svg,
+.wc-collection-date-calendar .flatpickr-next-month svg {
+    width: 14px !important;
+    height: 14px !important;
+}
+
+/* Weekday headers */
+.wc-collection-date-calendar .flatpickr-weekday {
+    color: #5c9fd8;
+    font-weight: 600;
+}
+
+/* ========================================
+   Error Messages
+   ======================================== */
+
+.wc-collection-date-error {
+    background: #e2401c;
+    color: #fff;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.wc-collection-date-wrapper .woocommerce-error {
+    background: #e2401c;
+    color: #fff;
+    padding: 10px 15px;
+    margin-top: 10px;
+    border-radius: 4px;
+    list-style: none;
+}
+
+/* ========================================
+   Loading State
+   ======================================== */
+
+.wc-collection-date-wrapper.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.wc-collection-date-wrapper.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #5c9fd8;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: wc-collection-date-spin 0.6s linear infinite;
+}
+
+@keyframes wc-collection-date-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ========================================
+   Order Confirmation Display
+   ======================================== */
+
+.wc-collection-date-confirmation {
+    margin: 30px 0;
+    padding: 20px;
+    background: #f8f8f8;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+}
+
+.wc-collection-date-confirmation h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.5em;
+    border-bottom: 2px solid #5c9fd8;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+.wc-collection-date-confirmation table {
+    margin: 0;
+    width: 100%;
+}
+
+.wc-collection-date-confirmation th {
+    text-align: left;
+    padding: 10px;
+    font-weight: 600;
+    width: 40%;
+}
+
+.wc-collection-date-confirmation td {
+    padding: 10px;
+    color: #5c9fd8;
+    font-size: 1.1em;
+}
+
+/* ========================================
+   Admin Order Display
+   ======================================== */
+
+.wc-collection-date-admin {
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 4px;
+}
+
+.wc-collection-date-admin h3 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.2em;
+    border-bottom: 2px solid #5c9fd8;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.wc-collection-date-admin p {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.wc-collection-date-admin strong {
+    color: #5c9fd8;
+}
+
+/* ========================================
+   Email Display
+   ======================================== */
+
+.wc-collection-date-email {
+    margin: 20px 0 !important;
+    padding: 15px !important;
+    background: #f5f5f5 !important;
+    border: 1px solid #ddd !important;
+    border-radius: 4px !important;
+}
+
+.wc-collection-date-email h2 {
+    margin-top: 0 !important;
+    color: #333 !important;
+    font-size: 1.3em !important;
+    border-bottom: 2px solid #5c9fd8 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 10px !important;
+}
+
+.wc-collection-date-email p {
+    margin: 0 !important;
+    line-height: 1.6 !important;
+}
+
+.wc-collection-date-email strong {
+    color: #5c9fd8 !important;
+}
+
+/* ========================================
+   Responsive Styles
+   ======================================== */
+
+@media (max-width: 768px) {
+    .wc-collection-date-wrapper {
+        margin-top: 15px;
+        margin-bottom: 15px;
+    }
+
+    .wc-collection-date-calendar {
+        width: 100% !important;
+    }
+
+    .wc-collection-date-confirmation,
+    .wc-collection-date-admin {
+        padding: 15px;
+        margin: 15px 0;
+    }
+
+    .wc-collection-date-confirmation th,
+    .wc-collection-date-confirmation td {
+        display: block;
+        width: 100%;
+        padding: 8px;
+    }
+
+    .wc-collection-date-confirmation th {
+        padding-bottom: 5px;
+    }
+
+    .wc-collection-date-confirmation td {
+        padding-top: 0;
+        padding-bottom: 15px;
+    }
+}
+
+/* ========================================
+   Accessibility
+   ======================================== */
+
+.wc-collection-date-calendar:focus-visible {
+    outline: 2px solid #5c9fd8;
+    outline-offset: 2px;
+}
+
+.wc-collection-date-calendar .flatpickr-day:focus {
+    outline: 2px solid #5c9fd8;
+    outline-offset: -2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .wc-collection-date-calendar .flatpickr-day.selected {
+        border: 2px solid currentColor !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    @keyframes wc-collection-date-spin {
+        to {
+            transform: none;
+        }
+    }
+
+    .wc-collection-date-calendar * {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}

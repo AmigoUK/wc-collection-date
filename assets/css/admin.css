@@ -1,0 +1,642 @@
+/**
+ * Admin styles for WooCommerce Collection Date
+ *
+ * @package WC_Collection_Date
+ */
+
+/* ==========================================================================
+   Settings Page Container
+   ========================================================================== */
+
+.wc-collection-date-settings {
+    max-width: 1200px;
+}
+
+.wc-collection-date-settings h1 {
+    margin-bottom: 20px;
+}
+
+.wc-collection-date-settings .form-table {
+    margin-top: 20px;
+}
+
+.wc-collection-date-settings .form-table th {
+    width: 200px;
+    padding: 20px 10px 20px 0;
+    vertical-align: top;
+}
+
+.wc-collection-date-settings .form-table td {
+    padding: 15px 10px;
+}
+
+/* ==========================================================================
+   Working Days Checkboxes
+   ========================================================================== */
+
+.wc-collection-date-working-days {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    max-width: 600px;
+}
+
+.wc-collection-date-working-days label {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.wc-collection-date-working-days label:hover {
+    background: #f0f0f0;
+    border-color: #c3c4c7;
+}
+
+.wc-collection-date-working-days input[type="checkbox"] {
+    margin: 0 8px 0 0;
+}
+
+.wc-collection-date-working-days input[type="checkbox"]:checked + span {
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.wc-collection-date-working-days .description {
+    grid-column: 1 / -1;
+    margin-top: 10px;
+}
+
+/* ==========================================================================
+   Number Input Fields
+   ========================================================================== */
+
+input[type="number"].small-text {
+    width: 80px;
+}
+
+/* ==========================================================================
+   Exclusions Section
+   ========================================================================== */
+
+.wc-collection-date-exclusions {
+    max-width: 800px;
+}
+
+.exclusions-add {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.exclusions-add input[type="text"].exclusion-date-picker {
+    width: 150px;
+    cursor: pointer;
+}
+
+.exclusions-add input[type="text"].regular-text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.exclusions-add .button {
+    flex-shrink: 0;
+}
+
+/* ==========================================================================
+   Exclusions Table
+   ========================================================================== */
+
+.exclusions-table {
+    margin-top: 10px;
+}
+
+.exclusions-table th {
+    font-weight: 600;
+}
+
+.exclusions-table .column-date {
+    width: 150px;
+}
+
+.exclusions-table .column-reason {
+    width: auto;
+}
+
+.exclusions-table .column-actions {
+    width: 100px;
+    text-align: center;
+}
+
+.exclusions-table tbody tr {
+    background: #fff;
+}
+
+.exclusions-table tbody tr:hover {
+    background: #f9f9f9;
+}
+
+.exclusions-table .no-items td {
+    text-align: center;
+    color: #646970;
+    font-style: italic;
+    padding: 20px;
+}
+
+.exclusions-table .button-link-delete {
+    color: #b32d2e;
+    text-decoration: none;
+}
+
+.exclusions-table .button-link-delete:hover,
+.exclusions-table .button-link-delete:focus {
+    color: #8a2424;
+}
+
+/* ==========================================================================
+   jQuery UI Datepicker Overrides
+   ========================================================================== */
+
+.ui-datepicker {
+    z-index: 100000 !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.ui-datepicker-header {
+    background: #2271b1;
+    color: #fff;
+    border: none;
+    border-radius: 4px 4px 0 0;
+}
+
+.ui-datepicker-title {
+    color: #fff;
+}
+
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+    cursor: pointer;
+}
+
+.ui-datepicker .ui-datepicker-prev:hover,
+.ui-datepicker .ui-datepicker-next:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+}
+
+.ui-datepicker td a {
+    text-align: center;
+    padding: 0.5em;
+    border-radius: 4px;
+}
+
+.ui-datepicker td a:hover {
+    background: #2271b1;
+    color: #fff;
+}
+
+.ui-datepicker td .ui-state-active {
+    background: #2271b1;
+    color: #fff;
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.exclusions-add .button.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.exclusions-add .button.loading::after {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-left: 8px;
+    border: 2px solid #fff;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================================================
+   Success/Error Messages
+   ========================================================================== */
+
+.wc-collection-date-settings .notice {
+    margin: 20px 0;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .wc-collection-date-settings .form-table th,
+    .wc-collection-date-settings .form-table td {
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+    }
+
+    .wc-collection-date-settings .form-table th {
+        padding-bottom: 5px;
+    }
+
+    .wc-collection-date-working-days {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .exclusions-add {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .exclusions-add input[type="text"].exclusion-date-picker,
+    .exclusions-add input[type="text"].regular-text {
+        width: 100%;
+    }
+
+    .exclusions-table .column-date {
+        width: 120px;
+    }
+
+    .exclusions-table .column-actions {
+        width: 80px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .wc-collection-date-working-days {
+        grid-template-columns: 1fr;
+    }
+
+    .exclusions-table {
+        font-size: 14px;
+    }
+
+    .exclusions-table th,
+    .exclusions-table td {
+        padding: 8px 5px;
+    }
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+.screen-reader-text {
+    clip: rect(1px, 1px, 1px, 1px);
+    clip-path: inset(50%);
+    height: 1px;
+    width: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    word-wrap: normal !important;
+}
+
+.wc-collection-date-working-days label:focus-within {
+    outline: 2px solid #2271b1;
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .exclusions-add,
+    .button,
+    .exclusions-table .column-actions {
+        display: none;
+    }
+
+    .exclusions-table {
+        border: 1px solid #000;
+    }
+}
+
+/* ==========================================================================
+   Admin Panel Tabs
+   ========================================================================== */
+
+.wc-collection-date-admin {
+    margin-top: 20px;
+}
+
+.wc-collection-date-tab-content {
+    margin-top: 20px;
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+}
+
+/* ==========================================================================
+   Collection Schedule Tab
+   ========================================================================== */
+
+.wc-collection-schedule-wrapper h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.wc-collection-schedule-wrapper .description {
+    margin-bottom: 20px;
+    color: #646970;
+}
+
+.wc-collection-schedule-wrapper .wp-list-table {
+    margin-top: 15px;
+}
+
+.wc-collection-schedule-wrapper .column-date {
+    width: 25%;
+}
+
+.wc-collection-schedule-wrapper .column-day {
+    width: 20%;
+}
+
+.wc-collection-schedule-wrapper .column-orders {
+    width: 30%;
+}
+
+.wc-collection-schedule-wrapper .column-actions {
+    width: 25%;
+    text-align: right;
+}
+
+.wc-collection-today {
+    background: #f0f6fc !important;
+    border-left: 4px solid #2271b1;
+}
+
+.wc-collection-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    margin-left: 8px;
+    background: #2271b1;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   Orders Tab
+   ========================================================================== */
+
+.wc-collection-orders-wrapper h2 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.wc-collection-filter {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+.wc-collection-filter form {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.wc-collection-filter label {
+    font-weight: 600;
+    margin-right: 5px;
+}
+
+.wc-collection-filter input[type="date"] {
+    padding: 5px 10px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+}
+
+.wc-collection-orders-wrapper .wp-list-table {
+    margin-top: 15px;
+}
+
+.wc-collection-orders-wrapper .column-order {
+    width: 15%;
+}
+
+.wc-collection-orders-wrapper .column-status {
+    width: 12%;
+}
+
+.wc-collection-orders-wrapper .column-date {
+    width: 20%;
+}
+
+.wc-collection-orders-wrapper .column-customer {
+    width: 23%;
+}
+
+.wc-collection-orders-wrapper .column-total {
+    width: 15%;
+}
+
+.wc-collection-orders-wrapper .column-actions {
+    width: 15%;
+    text-align: right;
+}
+
+.order-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.order-status.status-processing {
+    background: #c6e1c6;
+    color: #0c5c0c;
+}
+
+.order-status.status-pending {
+    background: #f8dda7;
+    color: #94660c;
+}
+
+.order-status.status-on-hold {
+    background: #f7e3d3;
+    color: #94660c;
+}
+
+.order-status.status-completed {
+    background: #c8d7e1;
+    color: #2e4453;
+}
+
+.order-status.status-cancelled {
+    background: #eba3a3;
+    color: #761919;
+}
+
+.order-status.status-refunded {
+    background: #e5e5e5;
+    color: #777;
+}
+
+.order-status.status-failed {
+    background: #eba3a3;
+    color: #761919;
+}
+
+/* ==========================================================================
+   Exclusions Tab
+   ========================================================================== */
+
+.wc-collection-exclusions-wrapper h2,
+.wc-collection-exclusions-wrapper h3 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dcdcde;
+}
+
+.wc-collection-exclusions-wrapper .description {
+    margin-bottom: 20px;
+    color: #646970;
+}
+
+.wc-collection-add-exclusion {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f9f9f9;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+}
+
+.wc-collection-add-exclusion h3 {
+    margin-top: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.wc-collection-exclusions-wrapper .form-table {
+    margin-top: 10px;
+}
+
+.wc-collection-exclusions-wrapper .wp-list-table {
+    margin-top: 15px;
+}
+
+.wc-collection-exclusions-wrapper .column-date {
+    width: 20%;
+}
+
+.wc-collection-exclusions-wrapper .column-day {
+    width: 20%;
+}
+
+.wc-collection-exclusions-wrapper .column-reason {
+    width: 45%;
+}
+
+.wc-collection-exclusions-wrapper .column-actions {
+    width: 15%;
+    text-align: right;
+}
+
+.wc-collection-exclusions-wrapper hr {
+    margin: 30px 0;
+    border: none;
+    border-top: 1px solid #dcdcde;
+}
+
+/* ==========================================================================
+   Notice Styles
+   ========================================================================== */
+
+.notice.inline {
+    margin: 15px 0;
+    padding: 12px;
+    border-left-width: 4px;
+}
+
+.notice.notice-info.inline {
+    background: #f0f6fc;
+    border-left-color: #72aee6;
+}
+
+.notice.notice-success.inline {
+    background: #edfaef;
+    border-left-color: #00a32a;
+}
+
+/* ==========================================================================
+   Responsive Styles for Tabs
+   ========================================================================== */
+
+@media screen and (max-width: 782px) {
+    .wc-collection-date-tab-content {
+        padding: 15px;
+    }
+
+    .wc-collection-filter form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .wc-collection-filter input[type="date"],
+    .wc-collection-filter .button {
+        width: 100%;
+    }
+
+    .wc-collection-schedule-wrapper .column-actions,
+    .wc-collection-orders-wrapper .column-actions,
+    .wc-collection-exclusions-wrapper .column-actions {
+        text-align: left;
+    }
+
+    .wc-collection-add-exclusion {
+        padding: 15px;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .wc-collection-schedule-wrapper .wp-list-table,
+    .wc-collection-orders-wrapper .wp-list-table,
+    .wc-collection-exclusions-wrapper .wp-list-table {
+        font-size: 13px;
+    }
+
+    .wc-collection-badge {
+        display: block;
+        margin-left: 0;
+        margin-top: 5px;
+        width: fit-content;
+    }
+}

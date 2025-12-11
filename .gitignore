@@ -1,0 +1,64 @@
+# WordPress Plugin .gitignore
+
+# Development and testing files
+development-docs/
+*.log
+*.bak
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Dependency directories
+node_modules/
+vendor/
+bower_components/
+
+# Build files
+dist/
+build/
+*.min.js
+*.min.css
+
+# Package managers
+composer.lock
+package-lock.json
+yarn.lock
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# PHP
+*.cache
+.phpunit.result.cache
+
+# WordPress specific
+wp-config.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# Database dumps
+*.sql
+*.sql.gz
