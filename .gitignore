@@ -27,12 +27,15 @@ vendor/
 bower_components/
 
 # Build files
+# Note: We include assets/dist/ in the repo for easy plugin distribution
 dist/
 build/
-assets/dist/
-*.min.js
-*.min.css
 *.map
+
+# Allow built assets in assets/dist/
+!assets/dist/
+!assets/dist/**/*.min.js
+!assets/dist/**/*.min.css
 
 # Package managers
 composer.lock
