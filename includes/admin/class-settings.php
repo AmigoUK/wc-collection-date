@@ -549,6 +549,9 @@ class WC_Collection_Date_Settings {
 
 			$resolver = new WC_Collection_Date_Lead_Time_Resolver();
 			if ( $resolver->save_category_rule( $category_id, $settings ) ) {
+				// Clear cache when category rules change.
+				WC_Collection_Date_Calculator::clear_cache();
+
 				$message = 'add_rule' === $action
 					? __( 'Category rule added successfully.', 'wc-collection-date' )
 					: __( 'Category rule updated successfully.', 'wc-collection-date' );
@@ -1045,6 +1048,9 @@ class WC_Collection_Date_Settings {
 					array( '%s', '%s' )
 				);
 
+				// Clear cache when exclusions change.
+				WC_Collection_Date_Calculator::clear_cache();
+
 				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Exclusion added successfully.', 'wc-collection-date' ) . '</p></div>';
 			}
 		}
@@ -1056,6 +1062,9 @@ class WC_Collection_Date_Settings {
 				array( 'id' => absint( $_GET['delete_exclusion'] ) ),
 				array( '%d' )
 			);
+
+			// Clear cache when exclusions change.
+			WC_Collection_Date_Calculator::clear_cache();
 
 			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Exclusion deleted successfully.', 'wc-collection-date' ) . '</p></div>';
 		}
@@ -1396,6 +1405,9 @@ class WC_Collection_Date_Settings {
 			}
 		}
 
+		// Clear cache when settings change.
+		WC_Collection_Date_Calculator::clear_cache();
+
 		return $sanitized;
 	}
 
@@ -1419,6 +1431,9 @@ class WC_Collection_Date_Settings {
 			}
 		}
 
+		// Clear cache when settings change.
+		WC_Collection_Date_Calculator::clear_cache();
+
 		return $sanitized;
 	}
 
@@ -1430,6 +1445,9 @@ class WC_Collection_Date_Settings {
 	 */
 	public function sanitize_lead_time_type( $input ) {
 		$valid_types = array( 'calendar', 'working' );
+
+		// Clear cache when settings change.
+		WC_Collection_Date_Calculator::clear_cache();
 
 		if ( in_array( $input, $valid_types, true ) ) {
 			return $input;
@@ -1445,6 +1463,9 @@ class WC_Collection_Date_Settings {
 	 * @return string Sanitized value.
 	 */
 	public function sanitize_cutoff_time( $input ) {
+		// Clear cache when settings change.
+		WC_Collection_Date_Calculator::clear_cache();
+
 		// Allow empty string.
 		if ( empty( $input ) ) {
 			return '';

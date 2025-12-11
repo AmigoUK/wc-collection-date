@@ -16,12 +16,27 @@ defined( 'ABSPATH' ) || exit;
 class WC_Collection_Date_Calculator {
 
 	/**
+	 * Cache duration in seconds (1 hour).
+	 *
+	 * @var int
+	 */
+	const CACHE_DURATION = 3600;
+
+	/**
 	 * Get available collection dates.
 	 *
 	 * @param int $limit Number of dates to return (default 90).
 	 * @return array Array of available dates in Y-m-d format.
 	 */
 	public function get_available_dates( $limit = 90 ) {
+		// Try to get from cache first.
+		$cache_key = $this->get_cache_key( 'global', $limit );
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached && is_array( $cached ) ) {
+			return $cached;
+		}
+
 		// Get global settings.
 		$settings = array(
 			'lead_time'       => absint( get_option( 'wc_collection_date_lead_time', 2 ) ),
@@ -31,7 +46,12 @@ class WC_Collection_Date_Calculator {
 			'collection_days' => get_option( 'wc_collection_date_collection_days', array( '0', '1', '2', '3', '4', '5', '6' ) ),
 		);
 
-		return $this->calculate_dates_from_settings( $settings, $limit );
+		$dates = $this->calculate_dates_from_settings( $settings, $limit );
+
+		// Cache the result.
+		set_transient( $cache_key, $dates, self::CACHE_DURATION );
+
+		return $dates;
 	}
 
 	/**
@@ -44,10 +64,23 @@ class WC_Collection_Date_Calculator {
 	 * @return array Array of available dates in Y-m-d format.
 	 */
 	public function get_available_dates_for_product( $product_id, $limit = 90 ) {
+		// Try to get from cache first.
+		$cache_key = $this->get_cache_key( 'product_' . $product_id, $limit );
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached && is_array( $cached ) ) {
+			return $cached;
+		}
+
 		$resolver = new WC_Collection_Date_Lead_Time_Resolver();
 		$settings = $resolver->get_effective_settings( $product_id );
 
-		return $this->calculate_dates_from_settings( $settings, $limit );
+		$dates = $this->calculate_dates_from_settings( $settings, $limit );
+
+		// Cache the result.
+		set_transient( $cache_key, $dates, self::CACHE_DURATION );
+
+		return $dates;
 	}
 
 	/**
@@ -119,6 +152,14 @@ class WC_Collection_Date_Calculator {
 	 * @return array Array of excluded dates in Y-m-d format.
 	 */
 	protected function get_excluded_dates() {
+		// Try to get from cache first.
+		$cache_key = 'wc_collection_date_exclusions';
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached && is_array( $cached ) ) {
+			return $cached;
+		}
+
 		global $wpdb;
 		$table_name = $wpdb->prefix . 'wc_collection_exclusions';
 
@@ -133,7 +174,12 @@ class WC_Collection_Date_Calculator {
 			ORDER BY exclusion_date ASC"
 		);
 
-		return $results ? $results : array();
+		$exclusions = $results ? $results : array();
+
+		// Cache the result.
+		set_transient( $cache_key, $exclusions, self::CACHE_DURATION );
+
+		return $exclusions;
 	}
 
 	/**
@@ -267,5 +313,46 @@ class WC_Collection_Date_Calculator {
 		}
 
 		return $lead_time;
+	}
+
+	/**
+	 * Generate cache key for date calculations.
+	 *
+	 * @param string $context Context (e.g., 'global', 'product_123').
+	 * @param int    $limit   Number of dates to fetch.
+	 * @return string Cache key.
+	 */
+	protected function get_cache_key( $context, $limit ) {
+		$current_date = current_time( 'Y-m-d' );
+		$current_hour = current_time( 'H' );
+
+		// Include current date and hour so cache refreshes daily and after cutoff.
+		return sprintf(
+			'wc_collection_dates_%s_%d_%s_%s',
+			$context,
+			$limit,
+			$current_date,
+			$current_hour
+		);
+	}
+
+	/**
+	 * Clear all cached date calculations.
+	 *
+	 * Call this when settings or exclusions change.
+	 *
+	 * @return bool True on success.
+	 */
+	public static function clear_cache() {
+		global $wpdb;
+
+		// Delete all transients with our prefix.
+		$wpdb->query(
+			"DELETE FROM {$wpdb->options}
+			WHERE option_name LIKE '_transient_wc_collection_date%'
+			OR option_name LIKE '_transient_timeout_wc_collection_date%'"
+		);
+
+		return true;
 	}
 }

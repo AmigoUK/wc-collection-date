@@ -29,8 +29,10 @@ bower_components/
 # Build files
 dist/
 build/
+assets/dist/
 *.min.js
 *.min.css
+*.map
 
 # Package managers
 composer.lock
