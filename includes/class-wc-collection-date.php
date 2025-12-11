@@ -111,6 +111,7 @@ class WC_Collection_Date {
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-checkout.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-rest-api.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-block-checkout-integration.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-analytics.php';
 
 		// Include admin classes if in admin context.
 		if ( is_admin() ) {
@@ -145,6 +146,11 @@ class WC_Collection_Date {
 
 		// Initialize Block Checkout integration.
 		new WC_Collection_Date_Block_Integration();
+
+		// Initialize analytics tracking.
+		if ( class_exists( 'WC_Collection_Date_Analytics' ) ) {
+			WC_Collection_Date_Analytics::instance();
+		}
 	}
 
 	/**

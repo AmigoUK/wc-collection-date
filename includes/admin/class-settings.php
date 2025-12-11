@@ -172,6 +172,7 @@ class WC_Collection_Date_Settings {
 			'schedule'       => __( 'Collection Schedule', 'wc-collection-date' ),
 			'orders'         => __( 'Orders', 'wc-collection-date' ),
 			'exclusions'     => __( 'Date Exclusions', 'wc-collection-date' ),
+			'analytics'      => __( 'Analytics', 'wc-collection-date' ),
 			'instructions'   => __( 'Instructions', 'wc-collection-date' ),
 			'import_export'  => __( 'Import/Export', 'wc-collection-date' ),
 		);
@@ -208,6 +209,9 @@ class WC_Collection_Date_Settings {
 						break;
 					case 'exclusions':
 						$this->render_exclusions_tab();
+						break;
+					case 'analytics':
+						$this->render_analytics_tab();
 						break;
 					case 'instructions':
 						$this->render_instructions_tab();
@@ -1719,5 +1723,704 @@ class WC_Collection_Date_Settings {
 			__( 'Settings imported successfully!', 'wc-collection-date' ),
 			'success'
 		);
+	}
+
+	/**
+	 * Render Analytics tab
+	 */
+	private function render_analytics_tab() {
+		// Ensure analytics class is loaded
+		if ( ! class_exists( 'WC_Collection_Date_Analytics' ) ) {
+			require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-analytics.php';
+		}
+
+		wp_enqueue_script( 'jquery-ui-datepicker' );
+		wp_enqueue_style( 'jquery-ui' );
+		?>
+		<div class="wc-collection-analytics-wrapper">
+			<h2><?php esc_html_e( 'Collection Date Analytics', 'wc-collection-date' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Track collection date usage patterns, popular dates, and customer behavior.', 'wc-collection-date' ); ?>
+			</p>
+
+			<!-- Period Selector -->
+			<div class="wc-analytics-period-selector">
+				<label for="period"><?php esc_html_e( 'Period:', 'wc-collection-date' ); ?></label>
+				<select id="period" name="period">
+					<option value="7days"><?php esc_html_e( 'Last 7 days', 'wc-collection-date' ); ?></option>
+					<option value="30days" selected><?php esc_html_e( 'Last 30 days', 'wc-collection-date' ); ?></option>
+					<option value="90days"><?php esc_html_e( 'Last 90 days', 'wc-collection-date' ); ?></option>
+					<option value="custom"><?php esc_html_e( 'Custom Range', 'wc-collection-date' ); ?></option>
+				</select>
+
+				<span id="custom-date-range" style="display: none;">
+					<input type="text" id="start-date" placeholder="<?php esc_attr_e( 'Start date', 'wc-collection-date' ); ?>" class="regular-text">
+					<span><?php esc_html_e( 'to', 'wc-collection-date' ); ?></span>
+					<input type="text" id="end-date" placeholder="<?php esc_attr_e( 'End date', 'wc-collection-date' ); ?>" class="regular-text">
+				</span>
+
+				<button id="refresh-analytics" class="button">
+					<span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
+					<?php esc_html_e( 'Refresh', 'wc-collection-date' ); ?>
+				</button>
+			</div>
+
+			<!-- Loading Indicator -->
+			<div id="analytics-loading" class="notice notice-info" style="display: none;">
+				<p><span class="spinner is-active"></span> <?php esc_html_e( 'Loading analytics data...', 'wc-collection-date' ); ?></p>
+			</div>
+
+			<!-- Analytics Content -->
+			<div id="analytics-content">
+				<!-- Summary Cards -->
+				<div class="wc-analytics-summary-cards">
+					<div class="summary-card">
+						<h3><?php esc_html_e( 'Total Selections', 'wc-collection-date' ); ?></h3>
+						<span id="total-selections" class="big-number">-</span>
+						<small><?php esc_html_e( 'Date selections', 'wc-collection-date' ); ?></small>
+					</div>
+
+					<div class="summary-card">
+						<h3><?php esc_html_e( 'Total Orders', 'wc-collection-date' ); ?></h3>
+						<span id="total-orders" class="big-number">-</span>
+						<small><?php esc_html_e( 'Completed orders', 'wc-collection-date' ); ?></small>
+					</div>
+
+					<div class="summary-card">
+						<h3><?php esc_html_e( 'Total Value', 'wc-collection-date' ); ?></h3>
+						<span id="total-value" class="big-number">-</span>
+						<small><?php esc_html_e( 'Order value', 'wc-collection-date' ); ?></small>
+					</div>
+
+					<div class="summary-card">
+						<h3><?php esc_html_e( 'Avg Lead Time', 'wc-collection-date' ); ?></h3>
+						<span id="avg-lead-time" class="big-number">-</span>
+						<small><?php esc_html_e( 'Days', 'wc-collection-date' ); ?></small>
+					</div>
+
+					<div class="summary-card">
+						<h3><?php esc_html_e( 'Conversion', 'wc-collection-date' ); ?></h3>
+						<span id="conversion-rate" class="big-number">-</span>
+						<small><?php esc_html_e( 'Selection rate', 'wc-collection-date' ); ?></small>
+					</div>
+				</div>
+
+				<!-- Charts Grid -->
+				<div class="wc-analytics-charts-grid">
+					<!-- Popular Dates Chart -->
+					<div class="chart-container">
+						<h3><?php esc_html_e( 'Most Popular Collection Dates', 'wc-collection-date' ); ?></h3>
+						<div id="popular-dates-chart" class="chart-content">
+							<div class="chart-placeholder">
+								<p><?php esc_html_e( 'Select a period and click Refresh', 'wc-collection-date' ); ?></p>
+							</div>
+						</div>
+						<div class="chart-actions">
+							<button class="button export-data" data-type="popular_dates">
+								<span class="dashicons dashicons-download"></span>
+								<?php esc_html_e( 'Export', 'wc-collection-date' ); ?>
+							</button>
+						</div>
+					</div>
+
+					<!-- Hourly Distribution -->
+					<div class="chart-container">
+						<h3><?php esc_html_e( 'Order Distribution by Hour', 'wc-collection-date' ); ?></h3>
+						<div id="hourly-chart" class="chart-content">
+							<div class="chart-placeholder">
+								<p><?php esc_html_e( 'Select a period and click Refresh', 'wc-collection-date' ); ?></p>
+							</div>
+						</div>
+						<div class="chart-actions">
+							<button class="button export-data" data-type="hourly">
+								<span class="dashicons dashicons-download"></span>
+								<?php esc_html_e( 'Export', 'wc-collection-date' ); ?>
+							</button>
+						</div>
+					</div>
+
+					<!-- Day of Week Distribution -->
+					<div class="chart-container">
+						<h3><?php esc_html_e( 'Orders by Day of Week', 'wc-collection-date' ); ?></h3>
+						<div id="day-week-chart" class="chart-content">
+							<div class="chart-placeholder">
+								<p><?php esc_html_e( 'Select a period and click Refresh', 'wc-collection-date' ); ?></p>
+							</div>
+						</div>
+						<div class="chart-actions">
+							<button class="button export-data" data-type="day_of_week">
+								<span class="dashicons dashicons-download"></span>
+								<?php esc_html_e( 'Export', 'wc-collection-date' ); ?>
+							</button>
+						</div>
+					</div>
+
+					<!-- Lead Time Distribution -->
+					<div class="chart-container">
+						<h3><?php esc_html_e( 'Lead Time Distribution', 'wc-collection-date' ); ?></h3>
+						<div id="lead-time-chart" class="chart-content">
+							<div class="chart-placeholder">
+								<p><?php esc_html_e( 'Select a period and click Refresh', 'wc-collection-date' ); ?></p>
+							</div>
+						</div>
+					</div>
+
+					<!-- Monthly Trends -->
+					<div class="chart-container full-width">
+						<h3><?php esc_html_e( 'Monthly Trends', 'wc-collection-date' ); ?></h3>
+						<div id="monthly-chart" class="chart-content">
+							<div class="chart-placeholder">
+								<p><?php esc_html_e( 'Select a period and click Refresh', 'wc-collection-date' ); ?></p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Popular Dates Table -->
+				<div class="wc-analytics-table">
+					<h3><?php esc_html_e( 'Top 20 Collection Dates', 'wc-collection-date' ); ?></h3>
+					<table class="wp-list-table widefat fixed striped">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Date', 'wc-collection-date' ); ?></th>
+								<th><?php esc_html_e( 'Day', 'wc-collection-date' ); ?></th>
+								<th><?php esc_html_e( 'Selections', 'wc-collection-date' ); ?></th>
+								<th><?php esc_html_e( 'Orders', 'wc-collection-date' ); ?></th>
+								<th><?php esc_html_e( 'Total Value', 'wc-collection-date' ); ?></th>
+								<th><?php esc_html_e( 'Avg Lead Time', 'wc-collection-date' ); ?></th>
+							</tr>
+						</thead>
+						<tbody id="popular-dates-table">
+							<tr>
+								<td colspan="6" style="text-align: center;">
+									<p><?php esc_html_e( 'No data to display', 'wc-collection-date' ); ?></p>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+		<style>
+			.wc-collection-analytics-wrapper {
+				padding: 20px;
+				background: #fff;
+				border: 1px solid #ccd0d4;
+				border-radius: 4px;
+				margin: 20px 0;
+			}
+
+			.wc-analytics-period-selector {
+				margin: 20px 0;
+				padding: 15px;
+				background: #f9f9f9;
+				border: 1px solid #e1e1e1;
+				border-radius: 4px;
+				display: flex;
+				align-items: center;
+				gap: 15px;
+				flex-wrap: wrap;
+			}
+
+			.wc-analytics-period-selector label {
+				font-weight: 600;
+			}
+
+			#custom-date-range {
+				display: inline-flex;
+				align-items: center;
+				gap: 10px;
+			}
+
+			.wc-analytics-summary-cards {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+				gap: 20px;
+				margin: 30px 0;
+			}
+
+			.summary-card {
+				background: #f8f9fa;
+				padding: 20px;
+				border: 1px solid #e1e1e1;
+				border-radius: 6px;
+				text-align: center;
+			}
+
+			.summary-card h3 {
+				margin: 0 0 10px;
+				font-size: 14px;
+				font-weight: 600;
+				color: #666;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+
+			.summary-card .big-number {
+				display: block;
+				font-size: 32px;
+				font-weight: bold;
+				color: #23282d;
+				line-height: 1.2;
+			}
+
+			.summary-card small {
+				color: #666;
+				font-size: 12px;
+			}
+
+			.wc-analytics-charts-grid {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 30px;
+				margin: 30px 0;
+			}
+
+			.chart-container {
+				background: #fff;
+				border: 1px solid #e1e1e1;
+				border-radius: 6px;
+				padding: 20px;
+			}
+
+			.chart-container.full-width {
+				grid-column: 1 / -1;
+			}
+
+			.chart-container h3 {
+				margin: 0 0 20px;
+				font-size: 16px;
+				color: #23282d;
+			}
+
+			.chart-content {
+				min-height: 250px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			.chart-placeholder {
+				color: #666;
+				text-align: center;
+			}
+
+			.chart-actions {
+				margin-top: 15px;
+				padding-top: 15px;
+				border-top: 1px solid #e1e1e1;
+				text-align: right;
+			}
+
+			.wc-analytics-table {
+				margin-top: 40px;
+			}
+
+			.wc-analytics-table h3 {
+				margin-bottom: 20px;
+				font-size: 18px;
+				color: #23282d;
+			}
+
+			/* Chart visualization */
+			.chart-bar {
+				height: 30px;
+				background: #0073aa;
+				border-radius: 3px;
+				margin: 5px 0;
+				position: relative;
+				transition: all 0.3s ease;
+			}
+
+			.chart-bar:hover {
+				background: #005a87;
+			}
+
+			.chart-bar-label {
+				position: absolute;
+				left: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+				color: #fff;
+				font-weight: 600;
+				text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+			}
+
+			.chart-bar-value {
+				position: absolute;
+				right: 10px;
+				top: 50%;
+				transform: translateY(-50%);
+				color: #fff;
+				font-size: 12px;
+			}
+
+			/* Responsive */
+			@media (max-width: 768px) {
+				.wc-analytics-charts-grid {
+					grid-template-columns: 1fr;
+				}
+
+				.wc-analytics-summary-cards {
+					grid-template-columns: 1fr 1fr;
+				}
+
+				.wc-analytics-period-selector {
+					flex-direction: column;
+					align-items: flex-start;
+				}
+			}
+
+			/* Loading animation */
+			#analytics-loading .spinner {
+				float: none;
+				margin-right: 10px;
+			}
+		</style>
+
+		<script>
+			jQuery(document).ready(function($) {
+				let analyticsData = null;
+
+				// Period selector change
+				$('#period').on('change', function() {
+					if ($(this).val() === 'custom') {
+						$('#custom-date-range').show();
+						$('#start-date, #end-date').datepicker({
+							dateFormat: 'yy-mm-dd'
+						});
+					} else {
+						$('#custom-date-range').hide();
+					}
+				});
+
+				// Refresh button
+				$('#refresh-analytics').on('click', function() {
+					loadAnalytics();
+				});
+
+				// Export buttons
+				$('.export-data').on('click', function() {
+					const dataType = $(this).data('type');
+					exportData(dataType);
+				});
+
+				// Load analytics function
+				function loadAnalytics() {
+					const period = $('#period').val();
+					let startDate, endDate;
+
+					if (period === 'custom') {
+						startDate = $('#start-date').val();
+						endDate = $('#end-date').val();
+
+						if (!startDate || !endDate) {
+							alert('<?php esc_html_e( "Please select both start and end dates", "wc-collection-date" ); ?>');
+							return;
+						}
+					}
+
+					// Show loading
+					$('#analytics-loading').show();
+					$('#analytics-content').hide();
+
+					// AJAX request
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wc_collection_date_get_analytics',
+							nonce: '<?php echo wp_create_nonce( "wc_collection_date_analytics_nonce" ); ?>',
+							period: period,
+							start_date: startDate,
+							end_date: endDate
+						},
+						success: function(response) {
+							if (response.success) {
+								analyticsData = response.data;
+								renderAnalytics(response.data);
+								$('#analytics-loading').hide();
+								$('#analytics-content').show();
+							}
+						},
+						error: function() {
+							$('#analytics-loading').hide();
+							alert('<?php esc_html_e( "Error loading analytics data", "wc-collection-date" ); ?>');
+						}
+					});
+				}
+
+				// Render analytics
+				function renderAnalytics(data) {
+					// Update summary cards
+					$('#total-selections').text(data.summary.total_selections.toLocaleString());
+					$('#total-orders').text(data.summary.total_orders.toLocaleString());
+					$('#total-value').text(data.summary.total_value);
+					$('#avg-lead-time').text(data.summary.avg_lead_time + ' days');
+					$('#conversion-rate').text(data.summary.conversion_rate + '%');
+
+					// Render popular dates chart
+					renderPopularDatesChart(data.popular_dates);
+
+					// Render hourly chart
+					renderHourlyChart(data.hourly_distribution);
+
+					// Render day of week chart
+					renderDayWeekChart(data.day_of_week_distribution);
+
+					// Render lead time chart
+					renderLeadTimeChart(data.lead_time_distribution);
+
+					// Render monthly chart
+					renderMonthlyChart(data.monthly_trends);
+
+					// Populate popular dates table
+					populatePopularDatesTable(data.popular_dates);
+				}
+
+				// Render popular dates chart
+				function renderPopularDatesChart(data) {
+					const container = $('#popular-dates-chart');
+					let html = '';
+
+					if (data && data.length > 0) {
+						// Find max value for scaling
+						const maxValue = Math.max(...data.map(d => parseInt(d.selection_count)));
+
+						data.slice(0, 10).forEach(item => {
+							const width = (item.selection_count / maxValue) * 100;
+							const date = new Date(item.collection_date).toLocaleDateString();
+							html += `
+								<div style="margin: 10px 0;">
+									<div style="font-size: 12px; margin-bottom: 2px;">${date}</div>
+									<div class="chart-bar" style="width: ${width}%; background: #0073aa;">
+										<span class="chart-bar-label">${item.selection_count}</span>
+									</div>
+								</div>
+							`;
+						});
+					} else {
+						html = '<div class="chart-placeholder"><p><?php esc_html_e( "No data available", "wc-collection-date" ); ?></p></div>';
+					}
+
+					container.html(html);
+				}
+
+				// Render hourly chart
+				function renderHourlyChart(data) {
+					const container = $('#hourly-chart');
+					const hours = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am', '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm'];
+
+					if (data) {
+						const maxValue = Math.max(...Object.values(data));
+						let html = '';
+
+						data.forEach((count, hour) => {
+							if (count > 0) {
+								const width = (count / maxValue) * 100;
+								html += `
+									<div style="margin: 10px 0; display: flex; align-items: center;">
+										<div style="width: 50px; font-size: 11px;">${hours[hour]}</div>
+										<div style="flex: 1; margin-left: 10px;">
+											<div class="chart-bar" style="width: ${width}%; background: #28a745;">
+												<span class="chart-bar-value">${count}</span>
+											</div>
+										</div>
+									</div>
+								`;
+							}
+						});
+
+						if (html) {
+							container.html(html);
+						} else {
+							container.html('<div class="chart-placeholder"><p><?php esc_html_e( "No hourly data", "wc-collection-date" ); ?></p></div>');
+						}
+					}
+				}
+
+				// Render day of week chart
+				function renderDayWeekChart(data) {
+					const container = $('#day-week-chart');
+					const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+					if (data) {
+						const maxValue = Math.max(...Object.values(data));
+						let html = '';
+
+						for (let i = 0; i < days.length; i++) {
+							const dayIndex = (i + 1) % 7 === 0 ? 7 : (i + 1) % 7; // Convert to 1-7 (Mon-Sun)
+							const count = data[dayIndex] || 0;
+							const width = count > 0 ? (count / maxValue) * 100 : 0;
+
+							html += `
+								<div style="margin: 10px 0; display: flex; align-items: center;">
+									<div style="width: 50px; font-weight: 600;">${days[i]}</div>
+									<div style="flex: 1; margin-left: 10px;">
+										<div class="chart-bar" style="width: ${width}%; background: #ffc107;">
+											<span class="chart-bar-value">${count}</span>
+										</div>
+									</div>
+								</div>
+							`;
+						}
+
+						container.html(html);
+					}
+				}
+
+				// Render lead time distribution
+				function renderLeadTimeChart(data) {
+					const container = $('#lead-time-chart');
+
+					if (data) {
+						const labels = Object.keys(data);
+						const values = Object.values(data);
+						const maxValue = Math.max(...values);
+
+						let html = '';
+						const colors = ['#0073aa', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
+
+						labels.forEach((label, index) => {
+							const value = values[index];
+							const width = value > 0 ? (value / maxValue) * 100 : 0;
+
+							html += `
+								<div style="margin: 15px 0;">
+									<div style="font-size: 12px; margin-bottom: 5px; font-weight: 600;">${label}: ${value} orders</div>
+									<div class="chart-bar" style="width: ${width}%; background: ${colors[index]};">
+									</div>
+								</div>
+							`;
+						});
+
+						container.html(html);
+					}
+				}
+
+				// Render monthly chart
+				function renderMonthlyChart(data) {
+					const container = $('#monthly-chart');
+					const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+					if (data) {
+						const maxValue = Math.max(...Object.values(data));
+						let html = '';
+
+						for (let i = 0; i < 12; i++) {
+							const count = data[i + 1] || 0;
+							const width = count > 0 ? (count / maxValue) * 100 : 0;
+
+							html += `
+								<div style="display: inline-block; width: 8%; margin: 0 0.5%; text-align: center;">
+									<div style="font-size: 11px; margin-bottom: 5px;">${months[i]}</div>
+									<div class="chart-bar" style="height: 100px; background: #17a2b8; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 5px;">
+										<span style="color: #fff; font-size: 10px; writing-mode: vertical-rl;">${count}</span>
+									</div>
+								</div>
+							`;
+						}
+
+						container.html(html);
+					}
+				}
+
+				// Populate popular dates table
+				function populatePopularDatesTable(data) {
+					const tbody = $('#popular-dates-table');
+
+					if (data && data.length > 0) {
+						let html = '';
+						data.forEach(item => {
+							const date = new Date(item.collection_date);
+							const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+							const formattedDate = date.toLocaleDateString();
+
+							html += `
+								<tr>
+									<td><strong>${formattedDate}</strong></td>
+									<td>${dayOfWeek}</td>
+									<td>${item.selection_count}</td>
+									<td>${item.total_orders}</td>
+									<td>${wc_price_format(item.total_value)}</td>
+									<td>${item.avg_lead_time} days</td>
+								</tr>
+							`;
+						});
+						tbody.html(html);
+					}
+				}
+
+				// Export function
+				function exportData(dataType) {
+					const period = $('#period').val();
+					let startDate, endDate;
+
+					if (period === 'custom') {
+						startDate = $('#start-date').val();
+						endDate = $('#end-date').val();
+					}
+
+					// Create form and submit
+					const form = $('<form>', {
+						method: 'POST',
+						action: ajaxurl
+					});
+
+					form.append($('<input>', {
+						type: 'hidden',
+						name: 'action',
+						value: 'wc_collection_date_export_analytics'
+					}));
+
+					form.append($('<input>', {
+						type: 'hidden',
+						name: 'nonce',
+						value: '<?php echo wp_create_nonce( "wc_collection_date_analytics_nonce" ); ?>'
+					}));
+
+					form.append($('<input>', {
+						type: 'hidden',
+						name: 'period',
+						value: period
+					}));
+
+					form.append($('<input>', {
+						type: 'hidden',
+						name: 'data_type',
+						value: dataType
+					}));
+
+					if (startDate && endDate) {
+						form.append($('<input>', {
+							type: 'hidden',
+							name: 'start_date',
+							value: startDate
+						}));
+
+						form.append($('<input>', {
+							type: 'hidden',
+							name: 'end_date',
+							value: endDate
+						}));
+					}
+
+					$('body').append(form);
+					form.submit();
+					form.remove();
+				}
+
+				// Price format helper
+				function wc_price_format(amount) {
+					// Simple price formatting - replace with your currency symbol as needed
+					return '<?php echo get_woocommerce_currency_symbol(); ?>' + parseFloat(amount).toFixed(2);
+				}
+
+				// Load initial data
+				loadAnalytics();
+			});
+		</script>
+		<?php
 	}
 }
