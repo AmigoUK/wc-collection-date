@@ -29,6 +29,11 @@
         selectedDate: null,
 
         /**
+         * Loading state
+         */
+        isLoading: false,
+
+        /**
          * Initialize
          */
         init: function() {
@@ -37,6 +42,7 @@
                 return;
             }
 
+            this.showLoadingState();
             this.loadAvailableDates();
             this.bindEvents();
         },
@@ -58,21 +64,27 @@
                 success: function(response) {
                     console.log('API Response:', response);
 
-                    if (response.success && response.dates) {
+                    if (response.success && response.dates && response.dates.length > 0) {
                         self.availableDates = response.dates;
                         console.log('Loaded ' + response.dates.length + ' available dates');
                         console.log('Date range:', response.dates[0], 'to', response.dates[response.dates.length - 1]);
                         self.initializeDatePicker();
                     } else {
                         console.error('API returned no dates or success=false');
-                        self.showError(wcCollectionDate.i18n.noDate);
+                        self.showError(
+                            wcCollectionDate.i18n.noDate || 'No collection dates available',
+                            'no_dates'
+                        );
                     }
                 },
                 error: function(xhr, status, error) {
                     console.error('Error loading dates:', error);
                     console.error('XHR:', xhr);
                     console.error('Status:', status);
-                    self.showError(wcCollectionDate.i18n.noDate);
+                    self.showError(
+                        wcCollectionDate.i18n.noDate || 'Failed to load collection dates',
+                        'api_error'
+                    );
                 }
             });
         },
@@ -138,6 +150,9 @@
                     console.log('First 10 dates:', self.availableDates.slice(0, 10));
                     console.log('Last 5 dates:', self.availableDates.slice(-5));
                     console.log('Calendar initialized on month:', instance.currentMonth, 'year:', instance.currentYear);
+
+                    // Hide loading state
+                    self.hideLoadingState();
 
                     // Jump to first available date's month
                     instance.jumpToDate(self.availableDates[0]);
@@ -223,17 +238,83 @@
         },
 
         /**
-         * Show error message
+         * Show loading state with skeleton screen
          */
-        showError: function(message) {
+        showLoadingState: function() {
+            this.isLoading = true;
             const $wrapper = $('.wc-collection-date-wrapper');
 
             if ($wrapper.length) {
-                const $error = $('<div class="wc-collection-date-error"></div>').text(message);
+                $wrapper.addClass('is-loading');
+
+                // Add skeleton loader
+                const $skeleton = $('<div class="wc-collection-date-skeleton">' +
+                    '<div class="skeleton-calendar">' +
+                    '<div class="skeleton-header"></div>' +
+                    '<div class="skeleton-weekdays"></div>' +
+                    '<div class="skeleton-days"></div>' +
+                    '</div>' +
+                    '</div>');
+
+                $wrapper.find('.wc-collection-date-skeleton').remove();
+                $wrapper.prepend($skeleton);
+            }
+
+            console.log('Loading collection dates...');
+        },
+
+        /**
+         * Hide loading state
+         */
+        hideLoadingState: function() {
+            this.isLoading = false;
+            const $wrapper = $('.wc-collection-date-wrapper');
+
+            if ($wrapper.length) {
+                $wrapper.removeClass('is-loading');
+                $wrapper.find('.wc-collection-date-skeleton').fadeOut(200, function() {
+                    $(this).remove();
+                });
+            }
+
+            console.log('Collection dates loaded successfully');
+        },
+
+        /**
+         * Show error message with better context
+         */
+        showError: function(message, context) {
+            const $wrapper = $('.wc-collection-date-wrapper');
+
+            // Hide loading state
+            this.hideLoadingState();
+
+            if ($wrapper.length) {
+                // Remove existing errors
+                $wrapper.find('.wc-collection-date-error').remove();
+
+                // Create detailed error message
+                let errorHtml = '<div class="wc-collection-date-error">';
+                errorHtml += '<strong>' + message + '</strong>';
+
+                // Add context-specific help
+                if (context === 'no_dates') {
+                    errorHtml += '<p class="error-help">';
+                    errorHtml += wcCollectionDate.i18n.errorHelp || 'Please check your lead time settings or try again later.';
+                    errorHtml += '</p>';
+                } else if (context === 'api_error') {
+                    errorHtml += '<p class="error-help">';
+                    errorHtml += 'Unable to load available dates. Please refresh the page or contact support if the issue persists.';
+                    errorHtml += '</p>';
+                }
+
+                errorHtml += '</div>';
+
+                const $error = $(errorHtml);
                 $wrapper.append($error);
             }
 
-            console.error('Collection Date Error:', message);
+            console.error('Collection Date Error:', message, context);
         },
 
         /**
