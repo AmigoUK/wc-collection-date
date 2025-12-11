@@ -173,6 +173,7 @@ class WC_Collection_Date_Settings {
 			'orders'         => __( 'Orders', 'wc-collection-date' ),
 			'exclusions'     => __( 'Date Exclusions', 'wc-collection-date' ),
 			'instructions'   => __( 'Instructions', 'wc-collection-date' ),
+			'import_export'  => __( 'Import/Export', 'wc-collection-date' ),
 		);
 		?>
 		<div class="wrap wc-collection-date-admin">
@@ -210,6 +211,9 @@ class WC_Collection_Date_Settings {
 						break;
 					case 'instructions':
 						$this->render_instructions_tab();
+						break;
+					case 'import_export':
+						$this->render_import_export_tab();
 						break;
 					case 'settings':
 					default:
@@ -1478,5 +1482,242 @@ class WC_Collection_Date_Settings {
 
 		// Invalid format, return empty.
 		return '';
+	}
+
+	/**
+	 * Render Import/Export tab
+	 */
+	public function render_import_export_tab() {
+		// Handle export.
+		if ( isset( $_POST['wc_collection_export_settings'] ) && check_admin_referer( 'wc_collection_export_settings' ) ) {
+			$this->export_settings();
+			return;
+		}
+
+		// Handle import.
+		if ( isset( $_POST['wc_collection_import_settings'] ) && check_admin_referer( 'wc_collection_import_settings' ) ) {
+			$this->import_settings();
+		}
+
+		?>
+		<div class="wc-collection-import-export-wrapper">
+			<h2><?php esc_html_e( 'Import/Export Settings', 'wc-collection-date' ); ?></h2>
+			<p class="description">
+				<?php esc_html_e( 'Export your plugin settings to a JSON file for backup or transfer to another site. Import settings from a JSON file to restore or clone configuration.', 'wc-collection-date' ); ?>
+			</p>
+
+			<div class="wc-collection-import-export-sections">
+				<!-- Export Section -->
+				<div class="wc-collection-export-section">
+					<h3><?php esc_html_e( 'Export Settings', 'wc-collection-date' ); ?></h3>
+					<p><?php esc_html_e( 'Download all plugin settings, category rules, and exclusions as a JSON file.', 'wc-collection-date' ); ?></p>
+
+					<form method="post" action="">
+						<?php wp_nonce_field( 'wc_collection_export_settings' ); ?>
+						<p>
+							<button type="submit" name="wc_collection_export_settings" class="button button-primary">
+								<span class="dashicons dashicons-download" style="margin-top: 3px;"></span>
+								<?php esc_html_e( 'Export Settings', 'wc-collection-date' ); ?>
+							</button>
+						</p>
+					</form>
+
+					<div class="wc-collection-export-info">
+						<p><strong><?php esc_html_e( 'What will be exported:', 'wc-collection-date' ); ?></strong></p>
+						<ul>
+							<li><?php esc_html_e( 'Global settings (lead time, working days, collection days)', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'Category-based rules', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'Date exclusions', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'Plugin version information', 'wc-collection-date' ); ?></li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- Import Section -->
+				<div class="wc-collection-import-section">
+					<h3><?php esc_html_e( 'Import Settings', 'wc-collection-date' ); ?></h3>
+					<p><?php esc_html_e( 'Upload a JSON file to restore or import settings from another site.', 'wc-collection-date' ); ?></p>
+
+					<form method="post" action="" enctype="multipart/form-data">
+						<?php wp_nonce_field( 'wc_collection_import_settings' ); ?>
+
+						<p>
+							<input type="file" name="import_file" accept=".json" required />
+						</p>
+
+						<p>
+							<label>
+								<input type="checkbox" name="overwrite_existing" value="1" />
+								<?php esc_html_e( 'Overwrite existing settings', 'wc-collection-date' ); ?>
+							</label>
+						</p>
+
+						<p>
+							<button type="submit" name="wc_collection_import_settings" class="button button-secondary">
+								<span class="dashicons dashicons-upload" style="margin-top: 3px;"></span>
+								<?php esc_html_e( 'Import Settings', 'wc-collection-date' ); ?>
+							</button>
+						</p>
+					</form>
+
+					<div class="wc-collection-import-warning">
+						<p><strong><?php esc_html_e( 'Important:', 'wc-collection-date' ); ?></strong></p>
+						<ul>
+							<li><?php esc_html_e( 'Always backup your settings before importing', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'If "Overwrite existing" is unchecked, existing rules will be preserved', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'Category IDs must match on both sites for rules to work correctly', 'wc-collection-date' ); ?></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Export settings to JSON file
+	 */
+	private function export_settings() {
+		global $wpdb;
+
+		// Gather all settings.
+		$export_data = array(
+			'version'         => get_option( 'wc_collection_date_version', '1.0.0' ),
+			'export_date'     => current_time( 'mysql' ),
+			'site_url'        => get_site_url(),
+			'settings'        => array(
+				'lead_time'          => get_option( 'wc_collection_date_lead_time', 2 ),
+				'lead_time_type'     => get_option( 'wc_collection_date_lead_time_type', 'calendar' ),
+				'cutoff_time'        => get_option( 'wc_collection_date_cutoff_time', '' ),
+				'working_days'       => get_option( 'wc_collection_date_working_days', array() ),
+				'collection_days'    => get_option( 'wc_collection_date_collection_days', array() ),
+				'max_booking_days'   => get_option( 'wc_collection_date_max_booking_days', 90 ),
+			),
+			'category_rules'  => get_option( 'wc_collection_date_category_rules', array() ),
+			'exclusions'      => array(),
+		);
+
+		// Get exclusions from database.
+		$table_name = $wpdb->prefix . 'wc_collection_exclusions';
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table_name ) ) === $table_name ) {
+			$exclusions = $wpdb->get_results(
+				"SELECT exclusion_date, reason FROM {$table_name} ORDER BY exclusion_date ASC",
+				ARRAY_A
+			);
+			$export_data['exclusions'] = $exclusions ? $exclusions : array();
+		}
+
+		// Generate filename.
+		$filename = 'wc-collection-date-settings-' . date( 'Y-m-d-His' ) . '.json';
+
+		// Set headers for download.
+		header( 'Content-Type: application/json' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+		header( 'Pragma: no-cache' );
+		header( 'Expires: 0' );
+
+		// Output JSON.
+		echo wp_json_encode( $export_data, JSON_PRETTY_PRINT );
+		exit;
+	}
+
+	/**
+	 * Import settings from JSON file
+	 */
+	private function import_settings() {
+		global $wpdb;
+
+		// Check file upload.
+		if ( ! isset( $_FILES['import_file'] ) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK ) {
+			add_settings_error(
+				'wc_collection_date_messages',
+				'import_error',
+				__( 'Error uploading file. Please try again.', 'wc-collection-date' ),
+				'error'
+			);
+			return;
+		}
+
+		// Read file contents.
+		$file_content = file_get_contents( $_FILES['import_file']['tmp_name'] );
+		$import_data  = json_decode( $file_content, true );
+
+		// Validate JSON.
+		if ( json_last_error() !== JSON_ERROR_NONE ) {
+			add_settings_error(
+				'wc_collection_date_messages',
+				'import_error',
+				__( 'Invalid JSON file. Please check the file format.', 'wc-collection-date' ),
+				'error'
+			);
+			return;
+		}
+
+		// Validate structure.
+		if ( ! isset( $import_data['settings'] ) ) {
+			add_settings_error(
+				'wc_collection_date_messages',
+				'import_error',
+				__( 'Invalid settings file. Missing required data.', 'wc-collection-date' ),
+				'error'
+			);
+			return;
+		}
+
+		$overwrite = isset( $_POST['overwrite_existing'] ) && $_POST['overwrite_existing'] === '1';
+
+		// Import settings.
+		if ( isset( $import_data['settings'] ) ) {
+			foreach ( $import_data['settings'] as $key => $value ) {
+				$option_name = 'wc_collection_date_' . $key;
+				if ( $overwrite || false === get_option( $option_name ) ) {
+					update_option( $option_name, $value );
+				}
+			}
+		}
+
+		// Import category rules.
+		if ( isset( $import_data['category_rules'] ) && is_array( $import_data['category_rules'] ) ) {
+			if ( $overwrite ) {
+				update_option( 'wc_collection_date_category_rules', $import_data['category_rules'] );
+			} else {
+				$existing_rules = get_option( 'wc_collection_date_category_rules', array() );
+				$merged_rules   = array_merge( $existing_rules, $import_data['category_rules'] );
+				update_option( 'wc_collection_date_category_rules', $merged_rules );
+			}
+		}
+
+		// Import exclusions.
+		if ( isset( $import_data['exclusions'] ) && is_array( $import_data['exclusions'] ) ) {
+			$table_name = $wpdb->prefix . 'wc_collection_exclusions';
+
+			if ( $overwrite ) {
+				// Clear existing exclusions.
+				$wpdb->query( "TRUNCATE TABLE {$table_name}" );
+			}
+
+			foreach ( $import_data['exclusions'] as $exclusion ) {
+				if ( isset( $exclusion['exclusion_date'] ) ) {
+					$wpdb->insert(
+						$table_name,
+						array(
+							'exclusion_date' => $exclusion['exclusion_date'],
+							'reason'         => isset( $exclusion['reason'] ) ? $exclusion['reason'] : '',
+						),
+						array( '%s', '%s' )
+					);
+				}
+			}
+		}
+
+		// Clear cache after import.
+		WC_Collection_Date_Calculator::clear_cache();
+
+		add_settings_error(
+			'wc_collection_date_messages',
+			'import_success',
+			__( 'Settings imported successfully!', 'wc-collection-date' ),
+			'success'
+		);
 	}
 }

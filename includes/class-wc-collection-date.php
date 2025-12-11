@@ -102,6 +102,9 @@ class WC_Collection_Date {
 	 * @since 1.0.0
 	 */
 	private function includes() {
+		// Load debug class first (for use in other classes).
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-debug.php';
+
 		// Load core classes.
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-lead-time-resolver.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-date-calculator.php';

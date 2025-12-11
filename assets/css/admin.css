@@ -640,3 +640,94 @@ input[type="number"].small-text {
         width: fit-content;
     }
 }
+
+/* ==========================================================================
+   Import/Export Tab
+   ========================================================================== */
+
+.wc-collection-import-export-wrapper {
+    max-width: 1200px;
+}
+
+.wc-collection-import-export-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.wc-collection-export-section,
+.wc-collection-import-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+}
+
+.wc-collection-export-section h3,
+.wc-collection-import-section h3 {
+    margin-top: 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.wc-collection-export-info,
+.wc-collection-import-warning {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-left: 4px solid #2271b1;
+    border-radius: 3px;
+}
+
+.wc-collection-import-warning {
+    border-left-color: #d63638;
+}
+
+.wc-collection-export-info ul,
+.wc-collection-import-warning ul {
+    margin: 10px 0 0 20px;
+    list-style: disc;
+}
+
+.wc-collection-export-info li,
+.wc-collection-import-warning li {
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.wc-collection-import-section input[type="file"] {
+    padding: 10px;
+    border: 2px dashed #ccd0d4;
+    border-radius: 4px;
+    background: #f9f9f9;
+    width: 100%;
+    max-width: 400px;
+    cursor: pointer;
+}
+
+.wc-collection-import-section input[type="file"]:hover {
+    border-color: #2271b1;
+    background: #fff;
+}
+
+.wc-collection-import-section label {
+    display: block;
+    margin: 10px 0;
+}
+
+.wc-collection-import-section input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.button .dashicons {
+    vertical-align: middle;
+}
+
+@media (max-width: 782px) {
+    .wc-collection-import-export-sections {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
