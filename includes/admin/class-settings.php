@@ -2156,7 +2156,12 @@ class WC_Collection_Date_Settings {
 					// Update summary cards
 					$('#total-selections').text(data.summary.total_selections.toLocaleString());
 					$('#total-orders').text(data.summary.total_orders.toLocaleString());
-					$('#total-value').text(data.summary.total_value);
+					// Use the formatted value from WooCommerce
+					if (data.summary.total_value.formatted) {
+						$('#total-value').html(data.summary.total_value.formatted);
+					} else {
+						$('#total-value').text(data.summary.total_value);
+					}
 					$('#avg-lead-time').text(data.summary.avg_lead_time + ' days');
 					$('#conversion-rate').text(data.summary.conversion_rate + '%');
 
@@ -2343,7 +2348,7 @@ class WC_Collection_Date_Settings {
 									<td>${dayOfWeek}</td>
 									<td>${item.selection_count}</td>
 									<td>${item.total_orders}</td>
-									<td>${wc_price_format(item.total_value)}</td>
+									<td><?php echo get_woocommerce_currency_symbol(); ?>${parseFloat(item.total_value).toFixed(2)}</td>
 									<td>${item.avg_lead_time} days</td>
 								</tr>
 							`;

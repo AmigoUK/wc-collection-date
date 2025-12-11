@@ -304,7 +304,10 @@ class WC_Collection_Date_Analytics {
 			'total_dates_available' => intval( $stats->total_dates ),
 			'total_selections' => intval( $stats->total_selections ),
 			'total_orders' => intval( $stats->total_orders ),
-			'total_value' => wc_price( floatval( $stats->total_value ) ),
+			'total_value' => array(
+				'formatted' => wc_price( floatval( $stats->total_value ) ),
+				'raw' => floatval( $stats->total_value )
+			),
 			'avg_lead_time' => round( floatval( $stats->avg_lead_time ), 1 ),
 			'conversion_rate' => $stats->total_dates > 0 ? round( ( $stats->total_selections / $stats->total_dates ) * 100, 1 ) : 0,
 		);
