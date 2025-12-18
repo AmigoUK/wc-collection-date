@@ -131,12 +131,33 @@ class WC_Collection_Date_Activator {
 			KEY last_selected (last_selected)
 		) {$charset_collate};";
 
+		// Create capacity management table
+		$capacity_table = $wpdb->prefix . 'wc_collection_date_capacity';
+
+		$sql3 = "CREATE TABLE {$capacity_table} (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			collection_date date NOT NULL,
+			max_capacity int NOT NULL DEFAULT 0,
+			current_bookings int NOT NULL DEFAULT 0,
+			available_slots int NOT NULL DEFAULT 0,
+			is_enabled tinyint(1) NOT NULL DEFAULT 1,
+			notes text NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			UNIQUE KEY collection_date (collection_date),
+			KEY max_capacity (max_capacity),
+			KEY available_slots (available_slots),
+			KEY is_enabled (is_enabled)
+		) {$charset_collate};";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql1 );
 		dbDelta( $sql2 );
+		dbDelta( $sql3 );
 
 		// Store database version.
-		update_option( 'wc_collection_date_db_version', '1.2.0' );
+		update_option( 'wc_collection_date_db_version', '1.3.0' );
 	}
 
 	/**
@@ -182,8 +203,21 @@ class WC_Collection_Date_Activator {
 			update_option( 'wc_collection_date_category_rules', array() );
 		}
 
+		// Default capacity management settings.
+		if ( false === get_option( 'wc_collection_date_default_capacity' ) ) {
+			update_option( 'wc_collection_date_default_capacity', 50 );
+		}
+
+		if ( false === get_option( 'wc_collection_date_capacity_enabled' ) ) {
+			update_option( 'wc_collection_date_capacity_enabled', false );
+		}
+
+		if ( false === get_option( 'wc_collection_date_capacity_buffer' ) ) {
+			update_option( 'wc_collection_date_capacity_buffer', 5 );
+		}
+
 		// Store plugin version.
-		update_option( 'wc_collection_date_version', '1.0.0' );
+		update_option( 'wc_collection_date_version', '1.3.0' );
 
 		// Set activation timestamp.
 		if ( false === get_option( 'wc_collection_date_activated' ) ) {

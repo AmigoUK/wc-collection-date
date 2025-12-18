@@ -169,6 +169,7 @@ class WC_Collection_Date_Settings {
 		$tabs = array(
 			'settings'       => __( 'Settings', 'wc-collection-date' ),
 			'category_rules' => __( 'Category Rules', 'wc-collection-date' ),
+			'calendar'       => __( 'Calendar', 'wc-collection-date' ),
 			'schedule'       => __( 'Collection Schedule', 'wc-collection-date' ),
 			'orders'         => __( 'Orders', 'wc-collection-date' ),
 			'exclusions'     => __( 'Date Exclusions', 'wc-collection-date' ),
@@ -200,6 +201,9 @@ class WC_Collection_Date_Settings {
 				switch ( $current_tab ) {
 					case 'category_rules':
 						$this->render_category_rules_tab();
+						break;
+					case 'calendar':
+						$this->render_calendar_tab();
 						break;
 					case 'schedule':
 						$this->render_schedule_tab();
