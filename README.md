@@ -18,7 +18,7 @@ Create category-specific lead time rules with different requirements for each pr
 
 ### Collection Schedule
 View upcoming collection dates at a glance with order counts.
-![Collection Schedule](img/collection%20shchedule.png)
+![Collection Schedule](img/collection-schedule.png)
 
 ### Date Exclusions
 Manage holidays and store closures with exclusion dates.
