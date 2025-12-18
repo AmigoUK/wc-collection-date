@@ -38,7 +38,7 @@ class WC_Collection_Date {
 	 * @since  1.0.0
 	 * @var    string
 	 */
-	protected $version = '1.1.0';
+	protected $version = '1.2.0';
 
 	/**
 	 * Main WC_Collection_Date Instance.

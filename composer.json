@@ -20,7 +20,12 @@
         "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
         "squizlabs/php_codesniffer": "^3.7",
         "phpcompatibility/phpcompatibility-wp": "^2.1",
-        "yoast/phpunit-polyfills": "^2.0"
+        "yoast/phpunit-polyfills": "^2.0",
+        "szepeker/phpstan-wordpress": "^1.0",
+        "enlightn/security-checker": "^1.0",
+        "phpcs/security-checker": "^2.0",
+        "phpstan/phpstan": "^1.0",
+        "mockery/mockery": "^1.0"
     },
     "autoload": {
         "psr-4": {
@@ -37,13 +42,31 @@
     },
     "scripts": {
         "test": [
-            "phpunit"
+            "vendor/bin/phpunit --configuration phpunit.xml"
         ],
-        "phpcs": [
-            "phpcs --standard=WordPress --extensions=php --ignore=*/vendor/*,*/node_modules/* ."
+        "test-coverage": [
+            "vendor/bin/phpunit --configuration phpunit.xml --coverage-html tests/coverage --coverage-clover tests/coverage.xml"
         ],
-        "phpcbf": [
-            "phpcbf --standard=WordPress --extensions=php --ignore=*/vendor/*,*/node_modules/* ."
+        "test-watch": [
+            "vendor/bin/phpunit --configuration phpunit.xml --stop-on-failure --testdox-text"
+        ],
+        "cs": [
+            "vendor/bin/phpcs --standard=PHPCompatibility,WordPress --extensions=php --ignore=tests,vendor --colors"
+        ],
+        "cs-fix": [
+            "vendor/bin/phpcbf --standard=WordPress --extensions=php --ignore=tests,vendor --colors --working-dir=."
+        ],
+        "analyze": [
+            "vendor/bin/phpstan analyze"
+        ],
+        "security": [
+            "vendor/bin/security-checker security:check --exclude-dev"
+        ],
+        "pre-commit": [
+            "@cs",
+            "@analyze",
+            "@test",
+            "@security"
         ],
         "lint": [
             "find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -exec php -l {} \\;"

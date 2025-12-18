@@ -89,7 +89,7 @@ class WC_Collection_Date_Activator {
 	 * Create database tables.
 	 *
 	 * Creates the wp_wc_collection_exclusions table for storing
-	 * excluded collection dates.
+	 * excluded collection dates and the wp_wc_collection_date_analytics table.
 	 *
 	 * @since 1.0.0
 	 */
@@ -97,9 +97,11 @@ class WC_Collection_Date_Activator {
 		global $wpdb;
 
 		$charset_collate = $wpdb->get_charset_collate();
-		$table_name      = $wpdb->prefix . 'wc_collection_exclusions';
 
-		$sql = "CREATE TABLE {$table_name} (
+		// Create exclusions table
+		$exclusions_table = $wpdb->prefix . 'wc_collection_exclusions';
+
+		$sql1 = "CREATE TABLE {$exclusions_table} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			exclusion_date date NOT NULL,
 			reason varchar(255) DEFAULT NULL,
@@ -110,11 +112,31 @@ class WC_Collection_Date_Activator {
 			KEY created_at (created_at)
 		) {$charset_collate};";
 
+		// Create analytics table
+		$analytics_table = $wpdb->prefix . 'wc_collection_date_analytics';
+
+		$sql2 = "CREATE TABLE {$analytics_table} (
+			id mediumint(9) NOT NULL AUTO_INCREMENT,
+			collection_date date NOT NULL,
+			selection_count int NOT NULL DEFAULT 0,
+			total_orders int NOT NULL DEFAULT 0,
+			total_value decimal(10,2) NOT NULL DEFAULT 0,
+			avg_lead_time decimal(5,2) NOT NULL DEFAULT 0,
+			last_selected datetime NULL,
+			created_at datetime DEFAULT CURRENT_TIMESTAMP,
+			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			PRIMARY KEY  (id),
+			UNIQUE KEY collection_date (collection_date),
+			KEY selection_count (selection_count),
+			KEY last_selected (last_selected)
+		) {$charset_collate};";
+
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-		dbDelta( $sql );
+		dbDelta( $sql1 );
+		dbDelta( $sql2 );
 
 		// Store database version.
-		update_option( 'wc_collection_date_db_version', '1.0.0' );
+		update_option( 'wc_collection_date_db_version', '1.2.0' );
 	}
 
 	/**

@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: WooCommerce Collection Date
- * Plugin URI: https://github.com/yourusername/wc-collection-date
+ * Plugin URI: https://github.com/AmigoUK/wc-collection-date
  * Description: Extends WooCommerce local pickup with customer-selected collection dates and advanced business rule configuration.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Tomasz 'Amigo' Lewandowski
  * Author URI: https://attv.uk
  * License: GPL v2 or later
@@ -26,7 +26,7 @@ if ( ! defined( 'WPINC' ) ) {
 /**
  * Current plugin version.
  */
-define( 'WC_COLLECTION_DATE_VERSION', '1.1.0' );
+define( 'WC_COLLECTION_DATE_VERSION', '1.2.0' );
 
 /**
  * Plugin directory path.
@@ -112,3 +112,4 @@ function run_wc_collection_date() {
 }
 
 add_action( 'plugins_loaded', 'run_wc_collection_date' );
+
