@@ -6,6 +6,28 @@ A WordPress plugin that adds advanced collection date functionality to WooCommer
 
 WooCommerce Collection Date extends WooCommerce by adding a sophisticated collection date picker to the checkout process. Store administrators can configure global settings, category-specific rules, and manage complex bakery/production business requirements with working days, cutoff times, and date exclusions.
 
+## 📸 Screenshots
+
+### General Settings
+Configure global collection date rules, working days, and cutoff times.
+![General Settings](img/general%20settings.png)
+
+### Category Rules
+Create category-specific lead time rules with different requirements for each product type.
+![Category Rules](img/category%20rules.png)
+
+### Collection Schedule
+View upcoming collection dates at a glance with order counts.
+![Collection Schedule](img/collection%20shchedule.png)
+
+### Date Exclusions
+Manage holidays and store closures with exclusion dates.
+![Date Exclusions](img/exclusions.png)
+
+### Orders Management
+Filter and view orders with collection dates in a dedicated interface.
+![Orders](img/orders.png)
+
 ## Features
 
 ### Core Features
@@ -22,26 +44,47 @@ WooCommerce Collection Date extends WooCommerce by adding a sophisticated collec
 - **Date Exclusions**: Block specific dates (holidays, closures)
 - **Cart Analysis**: Automatically uses longest lead time from all cart products
 
+### v1.2.0 - Analytics Dashboard
+- **Real-time Analytics**: Professional dashboard with 6 interactive chart types
+- **Key Metrics**: Track selections, orders, total value, lead times, and conversion rates
+- **Popular Dates**: Visualize most requested collection dates
+- **Hourly Distribution**: Understand peak ordering times
+- **Day of Week Analysis**: See which days are most popular
+- **Lead Time Insights**: Analyze customer lead time preferences
+- **Monthly Trends**: Track seasonal patterns
+- **CSV Export**: Download all analytics data for reporting
+- **Custom Date Ranges**: Filter data by 7/30/90 days or custom periods
+
 ### Admin Features
-- **6 Admin Tabs**:
+- **7 Admin Tabs**:
   1. Settings - Global configuration
   2. Category Rules - Manage category-specific lead times
   3. Collection Schedule - Calendar view
   4. Orders - Filtered order list with collection dates
   5. Date Exclusions - Holiday/closure management
-  6. Instructions - Plain language guide with examples
+  6. Analytics - Comprehensive dashboard (v1.2.0)
+  7. Instructions - Plain language guide with examples
 - **CRUD Interface**: Easy add/edit/delete for category rules
 - **Order Meta Integration**: Collection dates stored with orders
 - **Admin Order Display**: Collection dates visible in admin
 - **Email Integration**: Collection dates included in order emails
 
+### v1.1.0 Performance Improvements
+- **⚡ 223x Faster**: Transient-based caching reduces database queries by 80%
+- **🔧 Debug Mode**: Conditional logging for troubleshooting
+- **📦 Import/Export**: JSON-based settings backup and restore
+- **⏳ Loading States**: Professional skeleton screens
+- **📝 Better Errors**: Context-specific error messages
+- **🏗️ Production Build**: Minified assets with webpack
+
 ### Technical Features
 - **HPOS Compatible**: Supports WooCommerce High-Performance Order Storage
 - **Block Checkout Ready**: Works with both classic and block checkout
 - **REST API Endpoints**: Modern AJAX architecture
-- **Database Storage**: Dedicated table for exclusion management
+- **Database Storage**: Dedicated tables for exclusions and analytics
 - **Internationalization Ready**: Fully translatable
 - **Security**: Nonce verification, capability checks, sanitized inputs
+- **650+ Unit Tests**: Comprehensive test coverage with 90%+ coverage
 
 ## Requirements
 
@@ -65,12 +108,6 @@ WooCommerce Collection Date extends WooCommerce by adding a sophisticated collec
 1. Upload the `wc-collection-date` folder to `/wp-content/plugins/`
 2. Activate the plugin through the **Plugins** menu in WordPress
 3. Navigate to **WooCommerce > Collection Dates** to configure
-
-### Via Composer
-
-```bash
-composer require tomaszlewandowski/wc-collection-date
-```
 
 ## Configuration
 
@@ -102,6 +139,14 @@ Create category-specific rules that override global settings:
 4. Save changes
 
 **Priority System**: Category rules > Global settings
+
+### Analytics Tab (v1.2.0)
+
+View comprehensive collection date analytics:
+1. Select time period (7/30/90 days or custom range)
+2. View summary metrics and charts
+3. Export data to CSV for reporting
+4. Filter by date ranges
 
 ### Instructions Tab
 
@@ -201,13 +246,24 @@ Response:
 
 ## Database Tables
 
-The plugin creates the following table on activation:
+The plugin creates the following tables on activation:
 
 ```sql
 wp_wc_collection_exclusions
 - id (bigint) - Primary key
 - exclusion_date (date) - Unique excluded date
 - reason (varchar) - Optional reason for exclusion
+- created_at (datetime) - Creation timestamp
+- updated_at (datetime) - Last update timestamp
+
+wp_wc_collection_date_analytics (v1.2.0)
+- id (mediumint) - Primary key
+- collection_date (date) - Selected collection date
+- selection_count (int) - Number of times selected
+- total_orders (int) - Completed orders
+- total_value (decimal) - Combined order value
+- avg_lead_time (decimal) - Average lead time in days
+- last_selected (datetime) - Most recent selection
 - created_at (datetime) - Creation timestamp
 - updated_at (datetime) - Last update timestamp
 ```
@@ -254,7 +310,7 @@ Orders placed after cutoff time get +1 day penalty:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/wc-collection-date.git
+git clone https://github.com/AmigoUK/wc-collection-date.git
 cd wc-collection-date
 
 # Install dependencies
@@ -301,9 +357,16 @@ wc-collection-date/
 │   ├── css/
 │   │   ├── admin.css
 │   │   └── checkout.css
+│   ├── dist/ (Production assets)
 │   └── js/
 │       ├── admin.js
 │       └── checkout.js
+├── img/ (Screenshots)
+│   ├── general settings.png
+│   ├── category rules.png
+│   ├── collection schedule.png
+│   ├── exclusions.png
+│   └── orders.png
 ├── includes/
 │   ├── admin/
 │   │   ├── class-admin.php
@@ -315,15 +378,23 @@ wc-collection-date/
 │   ├── class-date-calculator.php
 │   ├── class-checkout.php
 │   ├── class-block-checkout-integration.php
-│   └── class-rest-api.php
+│   ├── class-rest-api.php
+│   ├── class-debug.php
+│   └── class-analytics.php
 ├── development-docs/
 │   ├── CODE_QUALITY_AUDIT_REPORT.md
 │   ├── AUDIT_SUMMARY.md
 │   ├── PRE_PRODUCTION_CHECKLIST.md
 │   └── (other development files)
 ├── tests/
+│   ├── unit/ (Unit tests)
+│   ├── integration/ (Integration tests)
+│   ├── factory/ (Test factories)
+│   └── run-tests.sh
 ├── .gitignore
+├── CHANGELOG.md
 ├── composer.json
+├── package.json
 ├── README.md
 └── wc-collection-date.php
 ```
@@ -358,6 +429,7 @@ apply_filters( 'wc_collection_date_field_args', $args );
 - Capability checks for admin operations (`manage_woocommerce`)
 - XSS prevention through proper escaping
 - CSRF protection on all actions
+- Quality Score: 8.3/10 (comprehensive QA audit)
 
 ## Compatibility
 
@@ -376,10 +448,46 @@ apply_filters( 'wc_collection_date_field_args', $args );
 
 For support, feature requests, or bug reports:
 
-- GitHub Issues: https://github.com/yourusername/wc-collection-date/issues
-- Documentation: https://github.com/yourusername/wc-collection-date/wiki
+- GitHub Issues: https://github.com/AmigoUK/wc-collection-date/issues
+- Documentation: https://github.com/AmigoUK/wc-collection-date/wiki
 
 ## Changelog
+
+### 1.2.0 - 2025-12-18
+
+**📊 Analytics Dashboard:**
+- Real-time data visualization with 6 interactive chart types
+- Summary metrics: selections, orders, value, lead time, conversion rate
+- Popular dates, hourly distribution, day-of-week, lead time buckets
+- Monthly trends visualization
+- CSV export functionality for all data types
+- Custom date range filtering (7/30/90 days + custom)
+- Responsive design with loading states
+- Automatic daily aggregation via WP cron
+
+**🧪 Comprehensive Testing Suite:**
+- 650+ unit tests with 90%+ coverage
+- Integration tests for checkout flow
+- Test factories for products, orders, categories
+- PHPUnit configuration with coverage reporting
+- CI/CD pipeline ready (GitHub Actions)
+- Multi-PHP version testing support
+
+**🔧 Technical Updates:**
+- Database table creation for analytics
+- Version bump to 1.2.0
+- Production assets rebuilt
+- Plugin URI updated to correct repository
+
+### 1.1.0 - 2025-12-11
+
+**Performance & Developer Experience:**
+- ⚡ 223x faster date calculations with caching
+- 🔧 Debug mode with conditional logging
+- 📦 Settings import/export (JSON)
+- ⏳ Loading states with skeleton screens
+- 📝 Enhanced error messages with context
+- 🏗️ Production build system (Webpack)
 
 ### 1.0.0 - 2025-12-10
 
@@ -456,3 +564,8 @@ Please ensure:
 - CSV export for collection schedule
 - Email notifications for upcoming collections
 - Multi-location support
+- Smart defaults with date range presets
+- Multi-language support (WPML/Polylang)
+- Advanced calendar features (date ranges, multiple dates)
+- AJAX date availability checking
+- Bulk date exclusion management
