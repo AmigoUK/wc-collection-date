@@ -1039,72 +1039,53 @@ class WC_Collection_Date_Settings {
 	}
 
 	/**
-	 * Render Exclusions tab
+	 * Render Exclusions tab with date range support
 	 */
 	private function render_exclusions_tab() {
-		global $wpdb;
-		$table_name = $wpdb->prefix . 'wc_collection_exclusions';
-
-		// Handle form submission.
-		if ( isset( $_POST['wc_collection_add_exclusion'] ) && check_admin_referer( 'wc_collection_add_exclusion' ) ) {
-			$exclusion_date = isset( $_POST['exclusion_date'] ) ? sanitize_text_field( wp_unslash( $_POST['exclusion_date'] ) ) : '';
-			$reason         = isset( $_POST['reason'] ) ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
-
-			if ( ! empty( $exclusion_date ) && ! empty( $reason ) ) {
-				$wpdb->insert(
-					$table_name,
-					array(
-						'exclusion_date' => $exclusion_date,
-						'reason'         => $reason,
-					),
-					array( '%s', '%s' )
-				);
-
-				// Clear cache when exclusions change.
-				WC_Collection_Date_Calculator::clear_cache();
-
-				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Exclusion added successfully.', 'wc-collection-date' ) . '</p></div>';
-			}
-		}
-
-		// Handle deletion.
-		if ( isset( $_GET['delete_exclusion'] ) && check_admin_referer( 'delete_exclusion_' . absint( $_GET['delete_exclusion'] ) ) ) {
-			$wpdb->delete(
-				$table_name,
-				array( 'id' => absint( $_GET['delete_exclusion'] ) ),
-				array( '%d' )
-			);
-
-			// Clear cache when exclusions change.
-			WC_Collection_Date_Calculator::clear_cache();
-
-			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Exclusion deleted successfully.', 'wc-collection-date' ) . '</p></div>';
-		}
-
-		// Get exclusions from database.
-		$exclusions = $wpdb->get_results(
-			"SELECT * FROM {$table_name} ORDER BY exclusion_date ASC"
-		);
+		// Handle form submission via AJAX (new method).
+		// Get exclusions using ExclusionManager.
+		$exclusions = WC_Collection_Date_Exclusion_Manager::get_exclusions();
 
 		?>
 		<div class="wc-collection-exclusions-wrapper">
 			<h2><?php esc_html_e( 'Manage Date Exclusions', 'wc-collection-date' ); ?></h2>
 			<p class="description">
-				<?php esc_html_e( 'Add dates that should be excluded from collection (holidays, closures, etc.). These dates will not be available in the collection date picker.', 'wc-collection-date' ); ?>
+				<?php esc_html_e( 'Add single dates or date ranges that should be excluded from collection (holidays, closures, etc.). These dates will not be available in the collection date picker.', 'wc-collection-date' ); ?>
 			</p>
 
 			<!-- Add Exclusion Form -->
 			<div class="wc-collection-add-exclusion">
 				<h3><?php esc_html_e( 'Add New Exclusion', 'wc-collection-date' ); ?></h3>
-				<form method="post" action="">
-					<?php wp_nonce_field( 'wc_collection_add_exclusion' ); ?>
+				<form id="wc-exclusion-form" method="post" action="">
+					<?php wp_nonce_field( 'wc_collection_add_exclusion', 'wc_exclusion_nonce' ); ?>
 					<table class="form-table">
 						<tr>
+							<th scope="row">
+								<label for="exclusion_type"><?php esc_html_e( 'Type', 'wc-collection-date' ); ?></label>
+							</th>
+							<td>
+								<select id="exclusion_type" name="exclusion_type" class="regular-text">
+									<option value="single"><?php esc_html_e( 'Single Date', 'wc-collection-date' ); ?></option>
+									<option value="range"><?php esc_html_e( 'Date Range', 'wc-collection-date' ); ?></option>
+								</select>
+							</td>
+						</tr>
+						<tr id="single-date-row">
 							<th scope="row">
 								<label for="exclusion_date"><?php esc_html_e( 'Date', 'wc-collection-date' ); ?></label>
 							</th>
 							<td>
-								<input type="date" id="exclusion_date" name="exclusion_date" required class="regular-text">
+								<input type="date" id="exclusion_date" name="exclusion_date" class="regular-text">
+							</td>
+						</tr>
+						<tr id="date-range-row" style="display: none;">
+							<th scope="row">
+								<label><?php esc_html_e( 'Date Range', 'wc-collection-date' ); ?></label>
+							</th>
+							<td>
+								<input type="date" id="exclusion_start" name="exclusion_start" class="regular-text" placeholder="<?php esc_attr_e( 'Start date', 'wc-collection-date' ); ?>">
+								<span><?php esc_html_e( 'to', 'wc-collection-date' ); ?></span>
+								<input type="date" id="exclusion_end" name="exclusion_end" class="regular-text" placeholder="<?php esc_attr_e( 'End date', 'wc-collection-date' ); ?>">
 							</td>
 						</tr>
 						<tr>
@@ -1112,15 +1093,16 @@ class WC_Collection_Date_Settings {
 								<label for="reason"><?php esc_html_e( 'Reason', 'wc-collection-date' ); ?></label>
 							</th>
 							<td>
-								<input type="text" id="reason" name="reason" required class="regular-text" placeholder="<?php esc_attr_e( 'e.g., Christmas Day, Store Closed', 'wc-collection-date' ); ?>">
-								<p class="description"><?php esc_html_e( 'Brief description of why this date is excluded.', 'wc-collection-date' ); ?></p>
+								<input type="text" id="reason" name="reason" required class="regular-text" placeholder="<?php esc_attr_e( 'e.g., Christmas Holiday, Store Maintenance', 'wc-collection-date' ); ?>">
+								<p class="description"><?php esc_html_e( 'Brief description of why this date(s) is excluded.', 'wc-collection-date' ); ?></p>
 							</td>
 						</tr>
 					</table>
 					<p class="submit">
-						<button type="submit" name="wc_collection_add_exclusion" class="button button-primary">
+						<button type="submit" id="wc-add-exclusion" class="button button-primary">
 							<?php esc_html_e( 'Add Exclusion', 'wc-collection-date' ); ?>
 						</button>
+						<span class="spinner" id="exclusion-spinner" style="display: none;"></span>
 					</p>
 				</form>
 			</div>
@@ -1129,44 +1111,478 @@ class WC_Collection_Date_Settings {
 
 			<!-- Existing Exclusions -->
 			<h3><?php esc_html_e( 'Existing Exclusions', 'wc-collection-date' ); ?></h3>
-			<?php if ( empty( $exclusions ) ) : ?>
-				<div class="notice notice-info inline">
-					<p><?php esc_html_e( 'No exclusions configured yet.', 'wc-collection-date' ); ?></p>
-				</div>
-			<?php else : ?>
-				<table class="wp-list-table widefat fixed striped">
-					<thead>
-						<tr>
-							<th class="column-date"><?php esc_html_e( 'Date', 'wc-collection-date' ); ?></th>
-							<th class="column-day"><?php esc_html_e( 'Day', 'wc-collection-date' ); ?></th>
-							<th class="column-reason"><?php esc_html_e( 'Reason', 'wc-collection-date' ); ?></th>
-							<th class="column-actions"><?php esc_html_e( 'Actions', 'wc-collection-date' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $exclusions as $exclusion ) : ?>
-							<?php $date = strtotime( $exclusion->exclusion_date ); ?>
+			<div id="wc-exclusions-list">
+				<?php if ( empty( $exclusions ) ) : ?>
+					<div class="notice notice-info inline">
+						<p><?php esc_html_e( 'No exclusions configured yet.', 'wc-collection-date' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="wp-list-table widefat fixed striped">
+						<thead>
 							<tr>
-								<td class="column-date">
-									<strong><?php echo esc_html( date_i18n( get_option( 'date_format' ), $date ) ); ?></strong>
-								</td>
-								<td class="column-day">
-									<?php echo esc_html( date_i18n( 'l', $date ) ); ?>
-								</td>
-								<td class="column-reason">
-									<?php echo esc_html( $exclusion->reason ); ?>
-								</td>
-								<td class="column-actions">
-									<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'page' => 'wc-collection-date', 'tab' => 'exclusions', 'delete_exclusion' => $exclusion->id ), admin_url( 'admin.php' ) ), 'delete_exclusion_' . $exclusion->id ) ); ?>" class="button button-small button-link-delete" onclick="return confirm('<?php esc_attr_e( 'Are you sure you want to delete this exclusion?', 'wc-collection-date' ); ?>');">
-										<?php esc_html_e( 'Delete', 'wc-collection-date' ); ?>
-									</a>
-								</td>
+								<th class="column-type"><?php esc_html_e( 'Type', 'wc-collection-date' ); ?></th>
+								<th class="column-date"><?php esc_html_e( 'Date(s)', 'wc-collection-date' ); ?></th>
+								<th class="column-reason"><?php esc_html_e( 'Reason', 'wc-collection-date' ); ?></th>
+								<th class="column-created"><?php esc_html_e( 'Created', 'wc-collection-date' ); ?></th>
+								<th class="column-actions"><?php esc_html_e( 'Actions', 'wc-collection-date' ); ?></th>
 							</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-			<?php endif; ?>
+						</thead>
+						<tbody>
+							<?php foreach ( $exclusions as $exclusion ) : ?>
+								<tr data-exclusion-id="<?php echo esc_attr( $exclusion->id ); ?>">
+									<td class="column-type">
+										<span class="exclusion-type-badge <?php echo esc_attr( $exclusion->exclusion_type ); ?>">
+											<?php
+											if ( 'range' === $exclusion->exclusion_type ) {
+												echo esc_html__( 'Range', 'wc-collection-date' );
+											} else {
+												echo esc_html__( 'Single', 'wc-collection-date' );
+											}
+											?>
+										</span>
+									</td>
+									<td class="column-date">
+										<?php if ( 'range' === $exclusion->exclusion_type ) : ?>
+											<div class="date-range-display">
+												<strong><?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $exclusion->exclusion_start ) ) ); ?></strong>
+												<span><?php esc_html_e( 'to', 'wc-collection-date' ); ?></span>
+												<strong><?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $exclusion->exclusion_end ) ) ); ?></strong>
+												<div class="range-duration">
+													<?php
+													$start = new DateTime( $exclusion->exclusion_start );
+													$end = new DateTime( $exclusion->exclusion_end );
+													$days = $start->diff( $end )->days + 1;
+													echo sprintf( esc_html( _n( '%d day', '%d days', $days, 'wc-collection-date' ) ), $days );
+													?>
+												</div>
+											</div>
+										<?php else : ?>
+											<div class="single-date-display">
+												<strong><?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $exclusion->exclusion_date ) ) ); ?></strong>
+												<div class="day-name">
+													<?php echo esc_html( date_i18n( 'l', strtotime( $exclusion->exclusion_date ) ) ); ?>
+												</div>
+											</div>
+										<?php endif; ?>
+									</td>
+									<td class="column-reason">
+										<?php echo esc_html( $exclusion->reason ); ?>
+									</td>
+									<td class="column-created">
+										<?php echo esc_html( date_i18n( get_option( 'date_format' ), strtotime( $exclusion->created_at ) ) ); ?>
+									</td>
+									<td class="column-actions">
+										<button type="button" class="button button-small delete-exclusion" data-id="<?php echo esc_attr( $exclusion->id ); ?>" data-nonce="<?php echo esc_attr( wp_create_nonce( 'delete_exclusion_' . $exclusion->id ) ); ?>">
+											<?php esc_html_e( 'Delete', 'wc-collection-date' ); ?>
+										</button>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+
+			<!-- Bulk Actions -->
+			<div class="wc-collection-bulk-actions" style="margin-top: 20px;">
+				<h3><?php esc_html_e( 'Bulk Actions', 'wc-collection-date' ); ?></h3>
+				<p class="description">
+					<?php esc_html_e( 'Quickly add common holiday ranges or bulk operations.', 'wc-collection-date' ); ?>
+				</p>
+				<div class="bulk-action-buttons">
+					<button type="button" id="bulk-christmas" class="button">
+						<?php esc_html_e( 'Add Christmas Holiday', 'wc-collection-date' ); ?>
+					</button>
+					<button type="button" id="bulk-new-year" class="button">
+						<?php esc_html_e( 'Add New Year Period', 'wc-collection-date' ); ?>
+					</button>
+					<button type="button" id="bulk-weekend-series" class="button">
+						<?php esc_html_e( 'Add Weekend Series', 'wc-collection-date' ); ?>
+					</button>
+					<button type="button" id="export-exclusions" class="button">
+						<?php esc_html_e( 'Export Exclusions', 'wc-collection-date' ); ?>
+					</button>
+				</div>
+			</div>
 		</div>
+
+		<!-- Date Range Modal for Weekends -->
+		<div id="weekend-modal" class="wc-collection-modal" style="display: none;">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h3><?php esc_html_e( 'Add Weekend Series', 'wc-collection-date' ); ?></h3>
+					<button type="button" class="modal-close">&times;</button>
+				</div>
+				<div class="modal-body">
+					<p><?php esc_html_e( 'Select weekends to exclude:', 'wc-collection-date' ); ?></p>
+					<table class="form-table">
+						<tr>
+							<th scope="row">
+								<label for="weekend-start"><?php esc_html_e( 'From Date', 'wc-collection-date' ); ?></label>
+							</th>
+							<td>
+								<input type="date" id="weekend-start" name="weekend-start" class="regular-text">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="weekend-end"><?php esc_html_e( 'To Date', 'wc-collection-date' ); ?></label>
+							</th>
+							<td>
+								<input type="date" id="weekend-end" name="weekend-end" class="regular-text">
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">
+								<label for="weekend-reason"><?php esc_html_e( 'Reason', 'wc-collection-date' ); ?></label>
+							</th>
+							<td>
+								<input type="text" id="weekend-reason" name="weekend-reason" class="regular-text" value="<?php esc_attr_e( 'Weekend Closure', 'wc-collection-date' ); ?>">
+							</td>
+						</tr>
+					</table>
+				</div>
+				<div class="modal-footer">
+					<button type="button" id="cancel-weekend" class="button"><?php esc_html_e( 'Cancel', 'wc-collection-date' ); ?></button>
+					<button type="button" id="save-weekend" class="button button-primary"><?php esc_html_e( 'Add Weekends', 'wc-collection-date' ); ?></button>
+				</div>
+			</div>
+		</div>
+
+		<style>
+			/* Exclusion Type Badges */
+			.exclusion-type-badge {
+				display: inline-block;
+				padding: 3px 8px;
+				border-radius: 12px;
+				font-size: 11px;
+				font-weight: 600;
+				text-transform: uppercase;
+			}
+			.exclusion-type-badge.single {
+				background: #e7f3ff;
+				color: #0073aa;
+			}
+			.exclusion-type-badge.range {
+				background: #f0f8e7;
+				color: #2271b1;
+			}
+
+			/* Date Display */
+			.single-date-display {
+				line-height: 1.4;
+			}
+			.single-date-display .day-name {
+				font-size: 12px;
+				color: #666;
+				margin-top: 2px;
+			}
+			.date-range-display {
+				line-height: 1.4;
+			}
+			.date-range-display .range-duration {
+				font-size: 11px;
+				color: #666;
+				margin-top: 2px;
+			}
+
+			/* Modal Styles */
+			.wc-collection-modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background: rgba(0, 0, 0, 0.6);
+				z-index: 100000;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+			}
+			.wc-collection-modal .modal-content {
+				background: #fff;
+				border-radius: 6px;
+				max-width: 500px;
+				width: 90%;
+				max-height: 90vh;
+				overflow-y: auto;
+			}
+			.wc-collection-modal .modal-header {
+				padding: 20px;
+				border-bottom: 1px solid #ddd;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			.wc-collection-modal .modal-header h3 {
+				margin: 0;
+			}
+			.wc-collection-modal .modal-close {
+				background: none;
+				border: none;
+				font-size: 20px;
+				cursor: pointer;
+				color: #666;
+			}
+			.wc-collection-modal .modal-body {
+				padding: 20px;
+			}
+			.wc-collection-modal .modal-footer {
+				padding: 20px;
+				border-top: 1px solid #ddd;
+				display: flex;
+				justify-content: flex-end;
+				gap: 10px;
+			}
+
+			/* Bulk Actions */
+			.bulk-action-buttons {
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				margin-top: 10px;
+			}
+
+			/* Loading spinner */
+			#exclusion-spinner {
+				vertical-align: middle;
+				margin-left: 10px;
+			}
+		</style>
+
+		<script>
+			jQuery(document).ready(function($) {
+				// Toggle between single date and date range
+				$('#exclusion_type').on('change', function() {
+					const type = $(this).val();
+					if (type === 'range') {
+						$('#single-date-row').hide();
+						$('#date-range-row').show();
+						$('#exclusion_date').prop('required', false);
+						$('#exclusion_start, #exclusion_end').prop('required', true);
+					} else {
+						$('#single-date-row').show();
+						$('#date-range-row').hide();
+						$('#exclusion_date').prop('required', true);
+						$('#exclusion_start, #exclusion_end').prop('required', false);
+					}
+				});
+
+				// Add exclusion form submission
+				$('#wc-exclusion-form').on('submit', function(e) {
+					e.preventDefault();
+
+					$('#exclusion-spinner').show();
+					$('.button-primary').prop('disabled', true);
+
+					const formData = {
+						action: 'wc_collection_add_exclusion',
+						nonce: $('#wc_exclusion_nonce').val(),
+						exclusion_type: $('#exclusion_type').val(),
+						reason: $('#reason').val()
+					};
+
+					if (formData.exclusion_type === 'single') {
+						formData.exclusion_date = $('#exclusion_date').val();
+					} else {
+						formData.exclusion_start = $('#exclusion_start').val();
+						formData.exclusion_end = $('#exclusion_end').val();
+					}
+
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: formData,
+						success: function(response) {
+							if (response.success) {
+								// Clear form
+								$('#wc-exclusion-form')[0].reset();
+								$('#single-date-row').show();
+								$('#date-range-row').hide();
+
+								// Show success message
+								$('<div class="notice notice-success is-dismissible"><p>' + response.data.message + '</p></div>')
+									.insertAfter('.wc-collection-add-exclusion h3')
+									.delay(3000)
+									.fadeOut(function() { $(this).remove(); });
+
+								// Reload exclusions list
+								location.reload();
+							} else {
+								alert(response.data.message || '<?php esc_html_e( "Error adding exclusion", "wc-collection-date" ); ?>');
+							}
+						},
+						error: function() {
+							alert('<?php esc_html_e( "AJAX error. Please try again.", "wc-collection-date" ); ?>');
+						},
+						complete: function() {
+							$('#exclusion-spinner').hide();
+							$('.button-primary').prop('disabled', false);
+						}
+					});
+				});
+
+				// Delete exclusion
+				$('.delete-exclusion').on('click', function() {
+					const id = $(this).data('id');
+					const nonce = $(this).data('nonce');
+
+					if (!confirm('<?php esc_html_e( "Are you sure you want to delete this exclusion?", "wc-collection-date" ); ?>')) {
+						return;
+					}
+
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wc_collection_delete_exclusion',
+							nonce: nonce,
+							id: id
+						},
+						success: function(response) {
+							if (response.success) {
+								$('tr[data-exclusion-id="' + id + '"]').fadeOut(300, function() {
+									$(this).remove();
+
+									// Check if table is empty
+									if ($('#wc-exclusions-list tbody tr').length === 0) {
+										$('#wc-exclusions-list').html('<div class="notice notice-info inline"><p><?php esc_html_e( "No exclusions configured yet.", "wc-collection-date" ); ?></p></div>');
+									}
+								});
+
+								// Show success message
+								$('<div class="notice notice-success is-dismissible"><p>' + response.data.message + '</p></div>')
+									.insertBefore('#wc-exclusions-list')
+									.delay(3000)
+									.fadeOut(function() { $(this).remove(); });
+							} else {
+								alert(response.data.message || '<?php esc_html_e( "Error deleting exclusion", "wc-collection-date" ); ?>');
+							}
+						},
+						error: function() {
+							alert('<?php esc_html_e( "AJAX error. Please try again.", "wc-collection-date" ); ?>');
+						}
+					});
+				});
+
+				// Bulk action: Christmas holiday
+				$('#bulk-christmas').on('click', function() {
+					const year = new Date().getFullYear();
+					const reason = prompt('<?php esc_html_e( "Enter reason for Christmas closure:", "wc-collection-date" ); ?>', '<?php echo esc_js( __( 'Christmas Holiday', 'wc-collection-date' ) ); ?>');
+
+					if (reason) {
+						addDateRange(year + '-12-24', year + '-12-26', reason);
+					}
+				});
+
+				// Bulk action: New Year period
+				$('#bulk-new-year').on('click', function() {
+					const year = new Date().getFullYear();
+					const reason = prompt('<?php esc_html_e( "Enter reason for New Year closure:", "wc-collection-date" ); ?>', '<?php echo esc_js( __( 'New Year Holiday', 'wc-collection-date' ) ); ?>');
+
+					if (reason) {
+						addDateRange(year + '-12-31', (parseInt(year) + 1) + '-01-02', reason);
+					}
+				});
+
+				// Bulk action: Weekend series
+				$('#bulk-weekend-series').on('click', function() {
+					$('#weekend-modal').show();
+				});
+
+				// Weekend modal handlers
+				$('.modal-close, #cancel-weekend').on('click', function() {
+					$('#weekend-modal').hide();
+				});
+
+				$('#save-weekend').on('click', function() {
+					const start = $('#weekend-start').val();
+					const end = $('#weekend-end').val();
+					const reason = $('#weekend-reason').val();
+
+					if (start && end && reason) {
+						// Add multiple weekend exclusions
+						const weekends = getWeekendsInRange(start, end);
+						let count = 0;
+
+						weekends.forEach(function(weekend) {
+							addDateRange(weekend.start, weekend.end, reason, false);
+							count++;
+						});
+
+						$('#weekend-modal').hide();
+						setTimeout(function() { location.reload(); }, 1000);
+					}
+				});
+
+				// Export exclusions
+				$('#export-exclusions').on('click', function() {
+					window.location.href = ajaxurl + '?action=wc_collection_export_exclusions&nonce=<?php echo wp_create_nonce( 'export_exclusions' ); ?>';
+				});
+
+				// Helper functions
+				function addDateRange(start, end, reason, reload = true) {
+					$.ajax({
+						url: ajaxurl,
+						type: 'POST',
+						data: {
+							action: 'wc_collection_add_exclusion',
+							nonce: '<?php echo wp_create_nonce( 'wc_collection_add_exclusion' ); ?>',
+							exclusion_type: 'range',
+							exclusion_start: start,
+							exclusion_end: end,
+							reason: reason
+						},
+						success: function(response) {
+							if (!response.success) {
+								alert(response.data.message || '<?php esc_html_e( "Error adding date range", "wc-collection-date" ); ?>');
+							} else if (reload) {
+								location.reload();
+							}
+						}
+					});
+				}
+
+				function getWeekendsInRange(start, end) {
+					const weekends = [];
+					const current = new Date(start);
+					const endDate = new Date(end);
+
+					while (current <= endDate) {
+						if (current.getDay() === 0 || current.getDay() === 6) { // Sunday or Saturday
+							const weekendStart = new Date(current);
+							const weekendEnd = new Date(current);
+
+							// Extend to include both Saturday and Sunday if we're on one
+							if (current.getDay() === 6) { // Saturday
+								weekendEnd.setDate(weekendEnd.getDate() + 1); // Add Sunday
+							} else { // Sunday
+								weekendStart.setDate(weekendStart.getDate() - 1); // Include Saturday
+							}
+
+							weekends.push({
+								start: formatDate(weekendStart),
+								end: formatDate(weekendEnd)
+							});
+
+							// Skip to next week
+							current.setDate(current.getDate() + 7);
+						} else {
+							current.setDate(current.getDate() + 1);
+						}
+					}
+
+					return weekends;
+				}
+
+				function formatDate(date) {
+					const year = date.getFullYear();
+					const month = String(date.getMonth() + 1).padStart(2, '0');
+					const day = String(date.getDate()).padStart(2, '0');
+					return year + '-' + month + '-' + day;
+				}
+			});
+		</script>
 		<?php
 	}
 

@@ -39,6 +39,11 @@ class WC_Collection_Date_Admin {
 		add_action( 'wp_ajax_wc_collection_date_get_calendar_data', array( $this, 'ajax_get_calendar_data' ) );
 		add_action( 'wp_ajax_wc_collection_date_update_capacity', array( $this, 'ajax_update_capacity' ) );
 		add_action( 'wp_ajax_wc_collection_date_get_day_bookings', array( $this, 'ajax_get_day_bookings' ) );
+
+		// Register AJAX handlers for date range exclusions
+		add_action( 'wp_ajax_wc_collection_add_exclusion', array( $this, 'ajax_add_exclusion' ) );
+		add_action( 'wp_ajax_wc_collection_delete_exclusion', array( $this, 'ajax_delete_exclusion' ) );
+		add_action( 'wp_ajax_wc_collection_export_exclusions', array( $this, 'ajax_export_exclusions' ) );
 	}
 
 	/**
@@ -366,5 +371,164 @@ class WC_Collection_Date_Admin {
 	 */
 	private function get_default_capacity() {
 		return (int) apply_filters( 'wc_collection_date_default_capacity', 50 );
+	}
+
+	/**
+	 * AJAX handler for adding exclusions.
+	 *
+	 * @since 1.4.0
+	 */
+	public function ajax_add_exclusion() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'wc_collection_add_exclusion', 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'wc-collection-date' ) ) );
+		}
+
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wc-collection-date' ) ) );
+		}
+
+		// Get exclusion data.
+		$exclusion_type = isset( $_POST['exclusion_type'] ) ? sanitize_text_field( wp_unslash( $_POST['exclusion_type'] ) ) : 'single';
+		$reason = isset( $_POST['reason'] ) ? sanitize_text_field( wp_unslash( $_POST['reason'] ) ) : '';
+
+		if ( empty( $reason ) ) {
+			wp_send_json_error( array( 'message' => __( 'Reason is required.', 'wc-collection-date' ) ) );
+		}
+
+		$data = array(
+			'exclusion_type' => $exclusion_type,
+			'reason' => $reason,
+		);
+
+		if ( 'single' === $exclusion_type ) {
+			$exclusion_date = isset( $_POST['exclusion_date'] ) ? sanitize_text_field( wp_unslash( $_POST['exclusion_date'] ) ) : '';
+			if ( empty( $exclusion_date ) ) {
+				wp_send_json_error( array( 'message' => __( 'Date is required for single exclusions.', 'wc-collection-date' ) ) );
+			}
+			$data['exclusion_date'] = $exclusion_date;
+		} else {
+			$exclusion_start = isset( $_POST['exclusion_start'] ) ? sanitize_text_field( wp_unslash( $_POST['exclusion_start'] ) ) : '';
+			$exclusion_end = isset( $_POST['exclusion_end'] ) ? sanitize_text_field( wp_unslash( $_POST['exclusion_end'] ) ) : '';
+			if ( empty( $exclusion_start ) || empty( $exclusion_end ) ) {
+				wp_send_json_error( array( 'message' => __( 'Both start and end dates are required for date ranges.', 'wc-collection-date' ) ) );
+			}
+			$data['exclusion_start'] = $exclusion_start;
+			$data['exclusion_end'] = $exclusion_end;
+		}
+
+		// Use ExclusionManager to add exclusion.
+		$result = WC_Collection_Date_Exclusion_Manager::add_exclusion( $data );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		// Clear cache when exclusions change.
+		WC_Collection_Date_Calculator::clear_cache();
+
+		wp_send_json_success( array( 'message' => __( 'Exclusion added successfully!', 'wc-collection-date' ) ) );
+	}
+
+	/**
+	 * AJAX handler for deleting exclusions.
+	 *
+	 * @since 1.4.0
+	 */
+	public function ajax_delete_exclusion() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'delete_exclusion_' . absint( $_POST['id'] ), 'nonce', false ) ) {
+			wp_send_json_error( array( 'message' => __( 'Security check failed.', 'wc-collection-date' ) ) );
+		}
+
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_send_json_error( array( 'message' => __( 'Insufficient permissions.', 'wc-collection-date' ) ) );
+		}
+
+		$id = isset( $_POST['id'] ) ? absint( $_POST['id'] ) : 0;
+		if ( ! $id ) {
+			wp_send_json_error( array( 'message' => __( 'Invalid exclusion ID.', 'wc-collection-date' ) ) );
+		}
+
+		// Use ExclusionManager to delete exclusion.
+		$result = WC_Collection_Date_Exclusion_Manager::delete_exclusion( $id );
+
+		if ( is_wp_error( $result ) ) {
+			wp_send_json_error( array( 'message' => $result->get_error_message() ) );
+		}
+
+		// Clear cache when exclusions change.
+		WC_Collection_Date_Calculator::clear_cache();
+
+		wp_send_json_success( array( 'message' => __( 'Exclusion deleted successfully!', 'wc-collection-date' ) ) );
+	}
+
+	/**
+	 * AJAX handler for exporting exclusions.
+	 *
+	 * @since 1.4.0
+	 */
+	public function ajax_export_exclusions() {
+		// Verify nonce.
+		if ( ! check_ajax_referer( 'export_exclusions', 'nonce', false ) ) {
+			wp_die( __( 'Security check failed.', 'wc-collection-date' ) );
+		}
+
+		// Check user capabilities.
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			wp_die( __( 'Insufficient permissions.', 'wc-collection-date' ) );
+		}
+
+		// Get all exclusions.
+		$exclusions = WC_Collection_Date_Exclusion_Manager::get_exclusions( array( 'limit' => 10000 ) );
+
+		// Prepare CSV data.
+		$csv_data = array(
+			array( 'Type', 'Start Date', 'End Date', 'Reason', 'Created' )
+		);
+
+		foreach ( $exclusions as $exclusion ) {
+			if ( 'range' === $exclusion->exclusion_type ) {
+				$csv_data[] = array(
+					'Date Range',
+					$exclusion->exclusion_start,
+					$exclusion->exclusion_end,
+					$exclusion->reason,
+					$exclusion->created_at,
+				);
+			} else {
+				$csv_data[] = array(
+					'Single Date',
+					$exclusion->exclusion_date,
+					'',
+					$exclusion->reason,
+					$exclusion->created_at,
+				);
+			}
+		}
+
+		// Create CSV file.
+		$filename = 'exclusions-export-' . date( 'Y-m-d' ) . '.csv';
+		$handle = fopen( 'php://temp', 'w' );
+
+		foreach ( $csv_data as $row ) {
+			fputcsv( $handle, $row );
+		}
+
+		rewind( $handle );
+		$csv = stream_get_contents( $handle );
+		fclose( $handle );
+
+		// Set headers for download.
+		header( 'Content-Type: text/csv' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+		header( 'Content-Length: ' . strlen( $csv ) );
+		header( 'Cache-Control: no-cache, must-revalidate' );
+		header( 'Pragma: no-cache' );
+
+		echo $csv;
+		exit;
 	}
 }

@@ -38,7 +38,7 @@ class WC_Collection_Date {
 	 * @since  1.0.0
 	 * @var    string
 	 */
-	protected $version = '1.3.0';
+	protected $version = '1.4.0';
 
 	/**
 	 * Main WC_Collection_Date Instance.
@@ -113,6 +113,9 @@ class WC_Collection_Date {
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-block-checkout-integration.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-analytics.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-calendar-service.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-migrator.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-exclusion-validator.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-exclusion-manager.php';
 
 		// Always load admin classes to handle AJAX requests and admin functionality
 		$this->load_admin_classes();
@@ -197,6 +200,9 @@ class WC_Collection_Date {
 	 * @since 1.0.0
 	 */
 	public function run() {
+		// Run database migrations if needed.
+		WC_Collection_Date_Migrator::migrate();
+
 		// Plugin is now running with all hooks defined.
 	}
 
