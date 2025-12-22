@@ -141,10 +141,16 @@ class WC_Collection_Date_Checkout {
 
 		if ( ! empty( $_POST['collection_date'] ) ) {
 			$collection_date = sanitize_text_field( wp_unslash( $_POST['collection_date'] ) );
-			update_post_meta( $order_id, '_collection_date', $collection_date );
 
-			// Verify it was saved
-			$saved_date = get_post_meta( $order_id, '_collection_date', true );
+			// Get order object for HPOS compatibility
+			$order = wc_get_order( $order_id );
+			if ( $order ) {
+				$order->update_meta_data( '_collection_date', $collection_date );
+				$order->save();
+
+				// Verify it was saved
+				$saved_date = $order->get_meta( '_collection_date' );
+			}
 		} else {
 		}
 	}
