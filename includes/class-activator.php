@@ -34,7 +34,7 @@ class WC_Collection_Date_Activator {
 	public static function activate() {
 		// Check if WooCommerce is active.
 		if ( ! self::is_woocommerce_active() ) {
-			deactivate_plugins( plugin_basename( WC_COLLECTION_DATE_PLUGIN_FILE ) );
+			deactivate_plugins( plugin_basename( WC_COLLECTION_DATE_PLUGIN_DIR . 'wc-collection-date.php' ) );
 			wp_die(
 				esc_html__( 'WooCommerce Collection Date requires WooCommerce to be installed and active.', 'wc-collection-date' ),
 				esc_html__( 'Plugin Activation Error', 'wc-collection-date' ),
@@ -44,7 +44,7 @@ class WC_Collection_Date_Activator {
 
 		// Check PHP version requirement.
 		if ( version_compare( PHP_VERSION, '7.4', '<' ) ) {
-			deactivate_plugins( plugin_basename( WC_COLLECTION_DATE_PLUGIN_FILE ) );
+			deactivate_plugins( plugin_basename( WC_COLLECTION_DATE_PLUGIN_DIR . 'wc-collection-date.php' ) );
 			wp_die(
 				esc_html__( 'WooCommerce Collection Date requires PHP version 7.4 or higher.', 'wc-collection-date' ),
 				esc_html__( 'Plugin Activation Error', 'wc-collection-date' ),

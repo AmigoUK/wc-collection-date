@@ -38,7 +38,7 @@ class WC_Collection_Date {
 	 * @since  1.0.0
 	 * @var    string
 	 */
-	protected $version = '1.2.0';
+	protected $version = '1.3.0';
 
 	/**
 	 * Main WC_Collection_Date Instance.
@@ -112,11 +112,10 @@ class WC_Collection_Date {
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-rest-api.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-block-checkout-integration.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-analytics.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-calendar-service.php';
 
-		// Include admin classes if in admin context.
-		if ( is_admin() ) {
-			$this->load_admin_classes();
-		}
+		// Always load admin classes to handle AJAX requests and admin functionality
+		$this->load_admin_classes();
 
 		// Initialize components.
 		$this->init_components();

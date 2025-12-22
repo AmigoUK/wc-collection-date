@@ -1367,9 +1367,77 @@ class WC_Collection_Date_Settings {
 
 			<hr>
 
+			<!-- Calendar Management -->
+			<div class="wc-instructions-section">
+				<h3><?php esc_html_e( '📅 Calendar Management - Visual Daily Overview', 'wc-collection-date' ); ?></h3>
+				<p><?php esc_html_e( 'The Calendar tab provides a powerful visual interface to manage daily collection capacities and track bookings.', 'wc-collection-date' ); ?></p>
+
+				<h4><?php esc_html_e( '🎯 Key Calendar Features:', 'wc-collection-date' ); ?></h4>
+				<ul style="line-height: 1.8; font-size: 14px;">
+					<li><strong><?php esc_html_e( 'Monthly Calendar View:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Navigate between months to see availability at a glance', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Color-Coded Status:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Visual indicators for available, moderate, high, full, and excluded dates', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Real-time Statistics:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Track total bookings, capacity, utilization rate, and available days', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Daily Capacity Management:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Click any date to adjust capacity limits (1-999)', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Order Tracking:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'View detailed order information for each collection date', 'wc-collection-date' ); ?></li>
+				</ul>
+
+				<h4 style="margin-top: 20px;"><?php esc_html_e( '🎨 Calendar Legend Guide:', 'wc-collection-date' ); ?></h4>
+				<div style="background: #f9f9f9; padding: 15px; border-radius: 4px; margin: 15px 0;">
+					<div style="display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; font-size: 14px;">
+						<span style="display: inline-block; width: 20px; height: 20px; background: #28a745; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'Available:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'Plenty of slots (over 80% available)', 'wc-collection-date' ); ?></span>
+
+						<span style="display: inline-block; width: 20px; height: 20px; background: #ffc107; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'Moderate:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'Filling up (20-80% available)', 'wc-collection-date' ); ?></span>
+
+						<span style="display: inline-block; width: 20px; height: 20px; background: #fd7e14; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'High:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'Almost full (under 20% available)', 'wc-collection-date' ); ?></span>
+
+						<span style="display: inline-block; width: 20px; height: 20px; background: #dc3545; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'Full:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'No available slots', 'wc-collection-date' ); ?></span>
+
+						<span style="display: inline-block; width: 20px; height: 20px; background: #6c757d; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'Excluded:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'Date blocked by exclusions', 'wc-collection-date' ); ?></span>
+
+						<span style="display: inline-block; width: 20px; height: 20px; background: #e9ecef; border: 2px solid #dee2e6; border-radius: 3px;"></span>
+						<strong><?php esc_html_e( 'Past:', 'wc-collection-date' ); ?></strong> <span><?php esc_html_e( 'Historical dates', 'wc-collection-date' ); ?></span>
+					</div>
+				</div>
+
+				<h4 style="margin-top: 20px;"><?php esc_html_e( '⚙️ Using Calendar Controls:', 'wc-collection-date' ); ?></h4>
+				<ol style="line-height: 1.8; font-size: 14px;">
+					<li><strong><?php esc_html_e( 'Navigation:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Use Previous/Next buttons or click "Today" to jump to current month', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Monthly Statistics:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'View total bookings, capacity, utilization rate, and available days for the month', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Date Details:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Click any available date to open details modal with booking information', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Capacity Updates:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'In the modal, adjust daily capacity (1-999) and save changes instantly', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Bulk Operations:', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Use quick actions to export calendar data or update multiple dates', 'wc-collection-date' ); ?></li>
+				</ol>
+
+				<h4 style="margin-top: 20px;"><?php esc_html_e( '💡 Pro Tips for Calendar Management:', 'wc-collection-date' ); ?></h4>
+				<div class="notice notice-info inline" style="margin: 15px 0;">
+					<ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8; font-size: 14px;">
+						<li><?php esc_html_e( 'Plan ahead by setting capacity for upcoming holidays and busy seasons', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Use the export feature to backup your capacity settings', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Monitor utilization rates to optimize your collection schedule', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Combine with Date Exclusions for complete holiday management', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Check daily statistics to identify peak collection times', 'wc-collection-date' ); ?></li>
+					</ul>
+				</div>
+
+				<h4 style="margin-top: 20px;"><?php esc_html_e( '🔧 Calendar Troubleshooting:', 'wc-collection-date' ); ?></h4>
+				<ul style="line-height: 1.8; font-size: 14px;">
+					<li><strong><?php esc_html_e( 'Calendar not loading?', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Refresh the page and check browser console for errors', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Wrong capacity showing?', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Check if capacity was set correctly for that date', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Dates not updating?', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Wait a moment for AJAX to complete, then refresh the calendar', 'wc-collection-date' ); ?></li>
+					<li><strong><?php esc_html_e( 'Export not working?', 'wc-collection-date' ); ?></strong> <?php esc_html_e( 'Ensure your browser allows downloads and check popup blockers', 'wc-collection-date' ); ?></li>
+				</ul>
+			</div>
+
+			<hr>
+
 			<!-- Troubleshooting -->
 			<div class="wc-instructions-section">
-				<h3><?php esc_html_e( '🔧 Troubleshooting', 'wc-collection-date' ); ?></h3>
+				<h3><?php esc_html_e( '🔧 General Troubleshooting', 'wc-collection-date' ); ?></h3>
 
 				<h4><?php esc_html_e( 'Wrong dates showing?', 'wc-collection-date' ); ?></h4>
 				<ul style="line-height: 1.8; font-size: 14px;">
@@ -1490,6 +1558,20 @@ class WC_Collection_Date_Settings {
 
 		// Invalid format, return empty.
 		return '';
+	}
+
+	/**
+	 * Render Calendar tab
+	 */
+	private function render_calendar_tab() {
+		// Load calendar admin class if not already loaded
+		if ( ! class_exists( 'WC_Collection_Date_Calendar' ) ) {
+			require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/admin/class-calendar.php';
+		}
+
+		// Instantiate and render calendar
+		$calendar = new WC_Collection_Date_Calendar();
+		$calendar->render_calendar_tab();
 	}
 
 	/**
