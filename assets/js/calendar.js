@@ -9,6 +9,248 @@
 (function($) {
     'use strict';
 
+    /**
+     * Calendar Selection Manager
+     * Handles multi-date selection functionality
+     */
+    var CalendarSelectionManager = {
+
+        selectedDates: [],
+        lastSelectedDate: null,
+        isSelecting: false,
+
+        /**
+         * Initialize selection manager
+         */
+        init: function() {
+            this.bindKeyboardEvents();
+        },
+
+        /**
+         * Toggle date selection
+         * @param {string} date Date in YYYY-MM-DD format
+         * @param {boolean} isMultiSelect Whether this is a multi-select operation
+         * @param {boolean} isRangeSelect Whether this is a range selection operation
+         */
+        toggleDateSelection: function(date, isMultiSelect, isRangeSelect) {
+            if (isRangeSelect && this.lastSelectedDate) {
+                this.selectRange(this.lastSelectedDate, date);
+            } else if (isMultiSelect) {
+                if (this.isDateSelected(date)) {
+                    this.deselectDate(date);
+                } else {
+                    this.selectDate(date);
+                }
+            } else {
+                this.clearSelection();
+                this.selectDate(date);
+            }
+
+            this.lastSelectedDate = date;
+            this.updateVisualStates();
+        },
+
+        /**
+         * Select a single date
+         * @param {string} date Date in YYYY-MM-DD format
+         */
+        selectDate: function(date) {
+            if (!this.isDateSelected(date)) {
+                this.selectedDates.push(date);
+                this.selectedDates.sort(); // Keep dates sorted
+            }
+        },
+
+        /**
+         * Deselect a single date
+         * @param {string} date Date in YYYY-MM-DD format
+         */
+        deselectDate: function(date) {
+            var index = this.selectedDates.indexOf(date);
+            if (index > -1) {
+                this.selectedDates.splice(index, 1);
+            }
+        },
+
+        /**
+         * Select a range of dates
+         * @param {string} startDate Start date in YYYY-MM-DD format
+         * @param {string} endDate End date in YYYY-MM-DD format
+         */
+        selectRange: function(startDate, endDate) {
+            this.clearSelection();
+
+            var start = new Date(startDate);
+            var end = new Date(endDate);
+
+            if (start > end) {
+                var temp = start;
+                start = end;
+                end = temp;
+            }
+
+            var currentDate = new Date(start);
+            while (currentDate <= end) {
+                var dateStr = this.formatDateForStorage(currentDate);
+                this.selectedDates.push(dateStr);
+                currentDate.setDate(currentDate.getDate() + 1);
+            }
+
+            this.selectedDates.sort();
+        },
+
+        /**
+         * Clear all selections
+         */
+        clearSelection: function() {
+            this.selectedDates = [];
+            this.lastSelectedDate = null;
+        },
+
+        /**
+         * Check if a date is selected
+         * @param {string} date Date in YYYY-MM-DD format
+         * @return {boolean} Whether the date is selected
+         */
+        isDateSelected: function(date) {
+            return this.selectedDates.indexOf(date) !== -1;
+        },
+
+        /**
+         * Get all selected dates
+         * @return {Array} Array of selected dates
+         */
+        getSelectedDates: function() {
+            return this.selectedDates.slice(); // Return copy
+        },
+
+        /**
+         * Update visual states for selected dates
+         */
+        updateVisualStates: function() {
+            var self = this;
+
+            // Remove all selection classes first
+            $('.calendar-day').removeClass('selected selected-range-start selected-range-end selected-range');
+
+            // Add selection classes to selected dates
+            $.each(this.selectedDates, function(index, date) {
+                var $dayElement = $('.calendar-day[data-date="' + date + '"]');
+                if ($dayElement.length > 0) {
+                    $dayElement.addClass('selected');
+
+                    // Add range-specific classes if more than one date is selected
+                    if (self.selectedDates.length > 1) {
+                        if (index === 0) {
+                            $dayElement.addClass('selected-range-start');
+                        } else if (index === self.selectedDates.length - 1) {
+                            $dayElement.addClass('selected-range-end');
+                        } else {
+                            $dayElement.addClass('selected-range');
+                        }
+                    }
+                }
+            });
+
+            // Update bulk action button state
+            var $bulkButton = $('#bulk-set-capacity');
+            if (this.selectedDates.length > 0) {
+                $bulkButton.prop('disabled', false);
+                $bulkButton.text('Apply to ' + this.selectedDates.length + ' Selected Date' + (this.selectedDates.length > 1 ? 's' : ''));
+            } else {
+                $bulkButton.prop('disabled', true);
+                $bulkButton.text('Apply to Selected');
+            }
+        },
+
+        /**
+         * Format date for storage
+         * @param {Date} date Date object
+         * @return {string} Formatted date string
+         */
+        formatDateForStorage: function(date) {
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        },
+
+        /**
+         * Bind keyboard events
+         */
+        bindKeyboardEvents: function() {
+            var self = this;
+
+            $(document).on('keydown', function(e) {
+                // Only handle keyboard events when calendar is active
+                if (!$('#calendar-grid').is(':visible')) {
+                    return;
+                }
+
+                var $focusedDay = $('.calendar-day:focus');
+
+                switch(e.keyCode) {
+                    case 27: // Escape - clear selection
+                        e.preventDefault();
+                        self.clearSelection();
+                        self.updateVisualStates();
+                        break;
+
+                    case 32: // Space - select/deselect focused day
+                    case 13: // Enter - select/deselect focused day
+                        if ($focusedDay.length > 0) {
+                            e.preventDefault();
+                            var date = $focusedDay.attr('data-date');
+                            var isMultiSelect = e.ctrlKey || e.metaKey;
+                            var isRangeSelect = e.shiftKey;
+                            self.toggleDateSelection(date, isMultiSelect, isRangeSelect);
+                        }
+                        break;
+
+                    case 37: // Left arrow - navigate to previous day
+                    case 38: // Up arrow - navigate to previous week
+                    case 39: // Right arrow - navigate to next day
+                    case 40: // Down arrow - navigate to next week
+                        if ($focusedDay.length > 0) {
+                            e.preventDefault();
+                            self.navigateWithArrows(e.keyCode, $focusedDay);
+                        }
+                        break;
+                }
+            });
+        },
+
+        /**
+         * Navigate with arrow keys
+         * @param {number} keyCode Key code of arrow key
+         * @param {jQuery} $currentDay Currently focused day element
+         */
+        navigateWithArrows: function(keyCode, $currentDay) {
+            var $days = $('.calendar-day:not(.other-month)');
+            var currentIndex = $days.index($currentDay);
+            var newIndex = currentIndex;
+
+            switch(keyCode) {
+                case 37: // Left
+                    newIndex = currentIndex - 1;
+                    break;
+                case 38: // Up
+                    newIndex = currentIndex - 7;
+                    break;
+                case 39: // Right
+                    newIndex = currentIndex + 1;
+                    break;
+                case 40: // Down
+                    newIndex = currentIndex + 7;
+                    break;
+            }
+
+            if (newIndex >= 0 && newIndex < $days.length) {
+                $days.eq(newIndex).focus();
+            }
+        }
+    };
+
     // Calendar controller
     var WCCollectionCalendar = {
 
@@ -22,6 +264,9 @@
         init: function() {
             this.currentYear = parseInt(wcCollectionCalendar.today.substring(0, 4));
             this.currentMonth = parseInt(wcCollectionCalendar.today.substring(5, 7));
+
+            // Initialize selection manager
+            CalendarSelectionManager.init();
 
             this.bindEvents();
             this.loadCalendarData();
@@ -145,6 +390,8 @@
         renderCalendar: function(data) {
             this.updateMonthDisplay();
             this.renderCalendarGrid(data.calendar_data);
+            // Update selection visual states after rendering
+            CalendarSelectionManager.updateVisualStates();
         },
 
         // Update month display
@@ -207,6 +454,18 @@
             // Date attribute for click handling
             $day.attr('data-date', dayData.date);
 
+            // Accessibility attributes
+            $day.attr('tabindex', '0');
+            $day.attr('role', 'gridcell');
+            $day.attr('aria-label', this.formatDateForAccessibility(dayData));
+            $day.attr('aria-selected', 'false');
+
+            // Check if date is already selected
+            if (CalendarSelectionManager.isDateSelected(dayData.date)) {
+                $day.addClass('selected');
+                $day.attr('aria-selected', 'true');
+            }
+
             // Day number
             $day.append('<div class="calendar-day-number">' + dayData.day + '</div>');
 
@@ -238,9 +497,30 @@
                 $day.append('<div class="calendar-day-tooltip" data-tooltip="' + tooltip + '"></div>');
             }
 
-            // Click handler
+            // Click handler for selection and modal
             if (!['excluded', 'past'].includes(dayData.status)) {
-                $day.on('click', function() {
+                $day.on('click', function(e) {
+                    // Handle selection with modifier keys
+                    var isMultiSelect = e.ctrlKey || e.metaKey;
+                    var isRangeSelect = e.shiftKey;
+
+                    // If it's a selection operation, handle selection first
+                    if (isMultiSelect || isRangeSelect) {
+                        CalendarSelectionManager.toggleDateSelection(dayData.date, isMultiSelect, isRangeSelect);
+                    } else {
+                        // Check if date is already selected for single click
+                        if (CalendarSelectionManager.isDateSelected(dayData.date)) {
+                            // If already selected, show modal (double-click behavior)
+                            this.showDayDetails(dayData);
+                        } else {
+                            // Single click for selection
+                            CalendarSelectionManager.toggleDateSelection(dayData.date, false, false);
+                        }
+                    }
+                }.bind(this));
+
+                // Double click for modal (alternative to single click on selected date)
+                $day.on('dblclick', function() {
                     this.showDayDetails(dayData);
                 }.bind(this));
             }
@@ -412,7 +692,8 @@
 
         // Bulk update capacity
         bulkUpdateCapacity: function() {
-            if (this.selectedDates.length === 0) {
+            var selectedDates = CalendarSelectionManager.getSelectedDates();
+            if (selectedDates.length === 0) {
                 alert('Please select dates to update');
                 return;
             }
@@ -431,13 +712,14 @@
                 completedCount++;
                 if (completedCount === updateCount) {
                     self.showSuccess('Capacity updated for ' + updateCount + ' dates');
-                    self.selectedDates = [];
+                    CalendarSelectionManager.clearSelection();
+                    CalendarSelectionManager.updateVisualStates();
                     self.loadCalendarData();
                 }
             }
 
             // Update capacity for each selected date
-            $.each(this.selectedDates, function(index, date) {
+            $.each(selectedDates, function(index, date) {
                 updateCount++;
                 self.updateCapacitySilently(date, capacity, showProgress);
             });
@@ -520,6 +802,46 @@
                 month: 'long',
                 day: 'numeric'
             });
+        },
+
+        // Format date for accessibility
+        formatDateForAccessibility: function(dayData) {
+            var date = new Date(dayData.date);
+            var formattedDate = date.toLocaleDateString(undefined, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            var statusText = '';
+            switch(dayData.status) {
+                case 'available':
+                    statusText = 'Available';
+                    break;
+                case 'moderate':
+                    statusText = 'Moderate availability';
+                    break;
+                case 'high':
+                    statusText = 'High demand';
+                    break;
+                case 'full':
+                    statusText = 'Fully booked';
+                    break;
+                case 'excluded':
+                    statusText = 'Excluded';
+                    break;
+                case 'past':
+                    statusText = 'Past date';
+                    break;
+                default:
+                    statusText = 'Unknown status';
+            }
+
+            return formattedDate + ', ' + statusText +
+                   (dayData.booked > 0 ? ', ' + dayData.booked + ' booked' : '') +
+                   (dayData.available > 0 ? ', ' + dayData.available + ' available' : '') +
+                   (dayData.is_today ? ', Today' : '');
         },
 
         getDayName: function(dayIndex) {

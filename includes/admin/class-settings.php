@@ -79,6 +79,16 @@ class WC_Collection_Date_Settings {
 
 		register_setting(
 			'wc_collection_date_settings',
+			'wc_collection_date_default_capacity',
+			array(
+				'type'              => 'integer',
+				'sanitize_callback' => array( $this, 'sanitize_default_capacity' ),
+				'default'           => 50,
+			)
+		);
+
+		register_setting(
+			'wc_collection_date_settings',
 			'wc_collection_date_collection_days',
 			array(
 				'type'              => 'array',
@@ -116,6 +126,14 @@ class WC_Collection_Date_Settings {
 			'wc_collection_date_lead_time',
 			__( 'Lead Time (days)', 'wc-collection-date' ),
 			array( $this, 'render_lead_time_field' ),
+			'wc-collection-date',
+			'wc_collection_date_general'
+		);
+
+		add_settings_field(
+			'wc_collection_date_default_capacity',
+			__( 'Default Capacity', 'wc-collection-date' ),
+			array( $this, 'render_default_capacity_field' ),
 			'wc-collection-date',
 			'wc_collection_date_general'
 		);
@@ -700,6 +718,26 @@ class WC_Collection_Date_Settings {
 		>
 		<p class="description">
 			<?php esc_html_e( 'Maximum number of days in the future customers can book collection dates.', 'wc-collection-date' ); ?>
+		</p>
+		<?php
+	}
+
+	/**
+	 * Render default capacity field
+	 */
+	public function render_default_capacity_field() {
+		$default_capacity = get_option( 'wc_collection_date_default_capacity', 50 );
+		?>
+		<input
+			type="number"
+			name="wc_collection_date_default_capacity"
+			value="<?php echo esc_attr( $default_capacity ); ?>"
+			min="1"
+			max="999"
+			class="small-text"
+		>
+		<p class="description">
+			<?php esc_html_e( 'Default daily capacity for collection dates when no specific capacity is set. This value is used as the default for all dates in the calendar.', 'wc-collection-date' ); ?>
 		</p>
 		<?php
 	}
@@ -1690,6 +1728,34 @@ class WC_Collection_Date_Settings {
 
 			<hr>
 
+			<!-- Default Capacity -->
+			<div class="wc-instructions-section">
+				<h3><?php esc_html_e( '📊 Default Capacity Setting', 'wc-collection-date' ); ?></h3>
+				<p style="line-height: 1.8; font-size: 14px;">
+					<?php esc_html_e( 'Set the maximum number of collections allowed per day. This capacity is used as the default for all dates unless overridden in the Calendar.', 'wc-collection-date' ); ?>
+				</p>
+
+				<div class="notice notice-info inline" style="margin: 15px 0;">
+					<p><strong><?php esc_html_e( 'How it works:', 'wc-collection-date' ); ?></strong><br>
+					<?php esc_html_e( '• Default Capacity: 50 (means 50 orders can collect per day)', 'wc-collection-date' ); ?><br>
+					<?php esc_html_e( '• Calendar shows: Available = Capacity - Current Bookings', 'wc-collection-date' ); ?><br>
+					<?php esc_html_e( '• Override: Use Calendar tab to set different capacity per day', 'wc-collection-date' ); ?><br>
+					<?php esc_html_e( '• Range: Accepts values from 1 to 999 collections per day', 'wc-collection-date' ); ?>
+					</p>
+				</div>
+
+				<div class="notice notice-success inline" style="margin: 15px 0;">
+					<p><strong><?php esc_html_e( 'Real Example:', 'wc-collection-date' ); ?></strong><br>
+					<?php esc_html_e( 'Default Capacity: 30', 'wc-collection-date' ); ?><br>
+					<?php esc_html_e( 'Today: 15 orders booked', 'wc-collection-date' ); ?><br><br>
+					<?php esc_html_e( 'Calendar shows: "15/30 - Available for 15 more collections"', 'wc-collection-date' ); ?><br>
+					<?php esc_html_e( 'Customers can select today until 30 orders are reached.', 'wc-collection-date' ); ?>
+					</p>
+				</div>
+			</div>
+
+			<hr>
+
 			<!-- Multiple Categories -->
 			<div class="wc-instructions-section">
 				<h3><?php esc_html_e( '🏷️ Products in Multiple Categories', 'wc-collection-date' ); ?></h3>
@@ -1764,6 +1830,7 @@ class WC_Collection_Date_Settings {
 							<li><?php esc_html_e( 'Set Working Days: Mon-Fri (production days)', 'wc-collection-date' ); ?></li>
 							<li><?php esc_html_e( 'Set Collection Days: All 7 days (customers can pickup anytime)', 'wc-collection-date' ); ?></li>
 							<li><?php esc_html_e( 'Set a reasonable default lead time (e.g., 2 days)', 'wc-collection-date' ); ?></li>
+							<li><?php esc_html_e( 'Set Default Capacity: Maximum daily collections (e.g., 50)', 'wc-collection-date' ); ?></li>
 							<li><?php esc_html_e( 'Choose "Working Days" calculation', 'wc-collection-date' ); ?></li>
 							<li><?php esc_html_e( 'Set cutoff time (e.g., 12:00 PM)', 'wc-collection-date' ); ?></li>
 						</ul>
@@ -1974,6 +2041,31 @@ class WC_Collection_Date_Settings {
 
 		// Invalid format, return empty.
 		return '';
+	}
+
+	/**
+	 * Sanitize default capacity
+	 *
+	 * @param int $input Input value.
+	 * @return int Sanitized value.
+	 */
+	public function sanitize_default_capacity( $input ) {
+		// Clear cache when settings change.
+		WC_Collection_Date_Calculator::clear_cache();
+
+		// Ensure it's an integer.
+		$capacity = absint( $input );
+
+		// Validate range (1-999).
+		if ( $capacity < 1 ) {
+			return 1;
+		}
+
+		if ( $capacity > 999 ) {
+			return 999;
+		}
+
+		return $capacity;
 	}
 
 	/**

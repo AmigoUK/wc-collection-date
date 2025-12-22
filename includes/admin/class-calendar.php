@@ -117,6 +117,20 @@ class WC_Collection_Date_Calendar {
 						<span class="legend-color past"></span>
 						<span><?php esc_html_e( 'Past', 'wc-collection-date' ); ?></span>
 					</div>
+					<div class="legend-item">
+						<span class="legend-color" style="background: #e3f2fd; border: 2px solid #2196f3;"></span>
+						<span><?php esc_html_e( 'Selected', 'wc-collection-date' ); ?></span>
+					</div>
+				</div>
+				<div class="legend-instructions">
+					<p><strong><?php esc_html_e( 'Selection Instructions:', 'wc-collection-date' ); ?></strong></p>
+					<ul>
+						<li><?php esc_html_e( 'Click to select a single date', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Ctrl/Cmd + Click to select multiple dates', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Shift + Click to select a range of dates', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Click selected date again to view details', 'wc-collection-date' ); ?></li>
+						<li><?php esc_html_e( 'Use arrow keys to navigate, Space/Enter to select, Escape to clear selection', 'wc-collection-date' ); ?></li>
+					</ul>
 				</div>
 			</div>
 
@@ -488,7 +502,7 @@ class WC_Collection_Date_Calendar {
 	 * @return int Default capacity value.
 	 */
 	private function get_default_capacity() {
-		return (int) apply_filters( 'wc_collection_date_default_capacity', 50 );
+		return (int) apply_filters( 'wc_collection_date_default_capacity', (int) get_option( 'wc_collection_date_default_capacity', 50 ) );
 	}
 
 	}

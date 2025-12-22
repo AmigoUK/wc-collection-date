@@ -104,12 +104,16 @@ class WC_Collection_Date_Activator {
 		$sql1 = "CREATE TABLE {$exclusions_table} (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			exclusion_date date NOT NULL,
+			exclusion_type ENUM('single', 'range') NOT NULL DEFAULT 'single',
+			exclusion_start date NULL,
+			exclusion_end date NULL,
 			reason varchar(255) DEFAULT NULL,
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
-			UNIQUE KEY exclusion_date (exclusion_date),
-			KEY created_at (created_at)
+			KEY idx_exclusion_date (exclusion_date),
+			KEY idx_exclusion_type (exclusion_type),
+			KEY idx_date_range (exclusion_start, exclusion_end)
 		) {$charset_collate};";
 
 		// Create analytics table
@@ -157,7 +161,7 @@ class WC_Collection_Date_Activator {
 		dbDelta( $sql3 );
 
 		// Store database version.
-		update_option( 'wc_collection_date_db_version', '1.3.0' );
+		update_option( 'wc_collection_date_db_version', '1.4.0' );
 	}
 
 	/**
