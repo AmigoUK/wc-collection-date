@@ -38,7 +38,7 @@ class WC_Collection_Date {
 	 * @since  1.0.0
 	 * @var    string
 	 */
-	protected $version = '1.4.0';
+	protected $version = '1.5.0';
 
 	/**
 	 * Main WC_Collection_Date Instance.
@@ -116,6 +116,7 @@ class WC_Collection_Date {
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-migrator.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-exclusion-validator.php';
 		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-exclusion-manager.php';
+		require_once WC_COLLECTION_DATE_PLUGIN_DIR . 'includes/class-delivery-note.php';
 
 		// Always load admin classes to handle AJAX requests and admin functionality
 		$this->load_admin_classes();
@@ -152,6 +153,11 @@ class WC_Collection_Date {
 		// Initialize analytics tracking.
 		if ( class_exists( 'WC_Collection_Date_Analytics' ) ) {
 			WC_Collection_Date_Analytics::instance();
+		}
+
+		// Initialize delivery note printing.
+		if ( class_exists( 'WC_Collection_Date_Delivery_Note' ) ) {
+			WC_Collection_Date_Delivery_Note::instance();
 		}
 	}
 
